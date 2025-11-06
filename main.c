@@ -8,16 +8,50 @@
 #include "renderer.h"
 #include "utils.h"
 
-int main() {
+Player *createPlayer()
+{
+  Player *player = (Player *)malloc(sizeof(Player));
+  if (player != NULL)
+  {
+    player->healthbar = 100;
+    return player;
+  }
+  return NULL;
+}
+
+Enemy *createEnemy(EnemyType type)
+{
+  Enemy *enemy = (Enemy *)malloc(sizeof(Enemy));
+  if (enemy != NULL)
+  {
+    switch (type)
+    {
+    case WEAK:
+      enemy->healthbar = 10 + rand() % 30;
+      enemy->type = type;
+      break;
+    case STRONG:
+      enemy->healthbar = 40 + rand() % 100;
+      enemy->type = type;
+      break;
+    }
+    return enemy;
+  }
+
+  return NULL;
+}
+
+int main()
+{
   must_init(al_init(), "allegro");
   must_init(al_init_image_addon(), "allegro");
   must_init(al_init_primitives_addon(), "primitives");
   must_init(al_install_keyboard(), "keyboard");
 
-  ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);
+  ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60.0);
   must_init(timer, "timer");
 
-  ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
+  ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
   must_init(queue, "queue");
 
   al_register_event_source(queue, al_get_keyboard_event_source());
@@ -31,45 +65,53 @@ int main() {
   al_register_event_source(queue,
                            al_get_display_event_source(renderer.display));
 
+  Player *player = createPlayer();
+
   al_start_timer(timer);
-  while (1) {
+  while (1)
+  {
     al_wait_for_event(queue, &event);
     int done = 0, print_combat = 0, redraw = 0;
 
-    switch (event.type) {
-      case ALLEGRO_EVENT_TIMER:
-        redraw = 1;
-        if (keyboard_keys[ALLEGRO_KEY_Q]) {
-          done = 1;
-          break;
-        }
+    switch (event.type)
+    {
+    case ALLEGRO_EVENT_TIMER:
+      redraw = 1;
+      if (keyboard_keys[ALLEGRO_KEY_Q])
+      {
+        done = 1;
+        break;
+      }
 
-        for (int i = 0; i < ALLEGRO_KEY_MAX; i++) {
-          keyboard_keys[i] &= ~GAME_KEY_SEEN;
-        }
-        break;
+      for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
+      {
+        keyboard_keys[i] &= ~GAME_KEY_SEEN;
+      }
+      break;
 
-      case ALLEGRO_EVENT_KEY_DOWN:
-        keyboard_keys[event.keyboard.keycode] = GAME_KEY_SEEN | GAME_KEY_DOWN;
-        break;
-      case ALLEGRO_EVENT_KEY_UP:
-        keyboard_keys[event.keyboard.keycode] &= ~GAME_KEY_DOWN;
-        break;
-      case ALLEGRO_EVENT_DISPLAY_CLOSE:
-        done = true;
-        break;
+    case ALLEGRO_EVENT_KEY_DOWN:
+      keyboard_keys[event.keyboard.keycode] = GAME_KEY_SEEN | GAME_KEY_DOWN;
+      break;
+    case ALLEGRO_EVENT_KEY_UP:
+      keyboard_keys[event.keyboard.keycode] &= ~GAME_KEY_DOWN;
+      break;
+    case ALLEGRO_EVENT_DISPLAY_CLOSE:
+      done = true;
+      break;
     }
-    if (done) {
+    if (done)
+    {
       break;
     }
     // You want to put your combat logic here.
-    if (redraw) {
-      Render(&renderer);
+    if (redraw)
+    {
+      Render(&renderer, player);
       redraw = 0;
     }
   }
   al_destroy_timer(timer);
   al_destroy_event_queue(queue);
-  ClearRenderer(&renderer);
+  ClearRenderer(&renderer, player);
   return 0;
 }
