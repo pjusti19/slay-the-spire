@@ -3,43 +3,13 @@
 #include <allegro5/allegro_primitives.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "constants.h"
 #include "renderer.h"
 #include "utils.h"
-
-Player *createPlayer()
-{
-  Player *player = (Player *)malloc(sizeof(Player));
-  if (player != NULL)
-  {
-    player->healthbar = 100;
-    return player;
-  }
-  return NULL;
-}
-
-Enemy *createEnemy(EnemyType type)
-{
-  Enemy *enemy = (Enemy *)malloc(sizeof(Enemy));
-  if (enemy != NULL)
-  {
-    switch (type)
-    {
-    case WEAK:
-      enemy->healthbar = 10 + rand() % 30;
-      enemy->type = type;
-      break;
-    case STRONG:
-      enemy->healthbar = 40 + rand() % 100;
-      enemy->type = type;
-      break;
-    }
-    return enemy;
-  }
-
-  return NULL;
-}
+#include "player.h"
+#include "enemy.h"
 
 int main()
 {
@@ -65,6 +35,7 @@ int main()
   al_register_event_source(queue,
                            al_get_display_event_source(renderer.display));
 
+  srand(time(NULL));
   Player *player = createPlayer();
 
   al_start_timer(timer);

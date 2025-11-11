@@ -9,8 +9,8 @@ INCLUDE_ALLEGRO=$(PATH_ALLEGRO)\include
 
 all: game.exe
 
-game.exe: main.o renderer.o utils.o
-	gcc -o game.exe main.o renderer.o utils.o $(LIB_ALLEGRO) -lm
+game.exe: main.o renderer.o utils.o player.o enemy.o
+	gcc -o game.exe main.o renderer.o utils.o player.o enemy.o $(LIB_ALLEGRO) -lm
 
 main.o: main.c
 	gcc -I $(INCLUDE_ALLEGRO) -c main.c
@@ -20,6 +20,12 @@ renderer.o: renderer.c
 
 utils.o: utils.c
 	gcc -I $(INCLUDE_ALLEGRO) -c utils.c
+
+player.o: player.c
+	gcc -I $(INCLUDE_ALLEGRO) -c player.c
+
+enemy.o: enemy.c
+	gcc -I $(INCLUDE_ALLEGRO) -c enemy.c
 
 clean:
 	del *.o game.exe

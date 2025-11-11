@@ -11,4 +11,6 @@ void ClearKeyboardKeys(unsigned char* keyboard_keys);
 
 void ShuffleArray(int* array, int size);
 
+void allocFail(char* struct_name);
+
 #endif

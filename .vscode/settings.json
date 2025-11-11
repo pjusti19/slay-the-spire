@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "renderer.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "allegro_font.h": "c",
+        "constants.h": "c",
+        "enemy.h": "c",
+        "string.h": "c",
+        "player.h": "c",
+        "math.h": "c",
+        "allegro_image.h": "c",
+        "utils.h": "c",
+        "allegro_primitives.h": "c"
+    }
+}

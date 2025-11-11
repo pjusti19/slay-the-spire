@@ -66,3 +66,7 @@ void ShuffleArray(int *array, int size)
   }
 }
 
+void allocFail(char *struct_name)
+{
+  printf("%s não pode ser alocado\n", struct_name);
+}
