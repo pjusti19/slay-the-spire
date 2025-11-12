@@ -1,6 +1,9 @@
 #ifndef _ENEMY_H_
 #define _ENEMY_H_
 
+#include "stats.h"
+#include "action.h"
+
 typedef enum
 {
   WEAK = 1,
@@ -10,9 +13,13 @@ typedef enum
 
 typedef struct
 {
-  int healthbar;
-  int shieldbar;
-  EnemyType type;
+  Stats *enemy_stats;
+  EnemyType enemy_type;
+  Action **actions;
+  int number_of_actions;
+  
 } Enemy;
+
+Enemy *createEnemy(EnemyType enemy_type);
 
 #endif

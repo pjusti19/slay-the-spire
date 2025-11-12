@@ -4,27 +4,38 @@
 #include "card.h"
 #include <stdlib.h>
 
-Card **createDeck()
+Deck *createDeck()
 {
-    Card **deck = (Card **)malloc(sizeof(Card *));
+    Deck *deck = (Deck *)malloc(sizeof(Deck));
     if (deck == NULL)
-    {
         allocFail("Deck");
-        exit(1);
-    }
-    for (int i = 0; i < 20; i++)
+
+    deck->deck_size = 20;
+
+    deck->cards = (Card **)malloc(deck->deck_size * sizeof(Card *));
+    if (deck->cards == NULL)
+        allocFail("Cards");
+
+    for (int i = 0; i < deck->deck_size; i++)
     {
         if (i < 6)
-            deck[i] = createCard(ATTACK, i);
-        else if(i < 10)
-            deck[i] = createCard(ATTACK, (rand() % 4));
-        else if(i < 16)
-            deck[i] = createCard(DEFENSE, (i - 10));
-        else if(i < 18)
-            deck[i] = createCard(DEFENSE, (rand() % 3));
+            deck->cards[i] = createCard(ATTACK, ceil(pow(1.25, i) - 1));
+        else if (i < 10)
+            deck->cards[i] = createCard(ATTACK, (rand() % 4));
+        else if (i < 16)
+            deck->cards[i] = createCard(DEFENSE, ceil(pow(1.25, i - 10) - 1));
+        else if (i < 18)
+            deck->cards[i] = createCard(DEFENSE, (rand() % 3));
         else
-            deck[i] = createCard(SPECIAL, 0);
+            deck->cards[i] = createCard(SPECIAL, 0);
     }
 
+    shuffleDeck(deck);
+
     return deck;
+}
+
+void discardCard(Deck *deck)
+{
+    deck->deck_size--;
 }

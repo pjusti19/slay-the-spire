@@ -1,13 +1,17 @@
 #ifndef _PLAYER_H_
 #define _PLAYER_H_
 
+#include "stats.h"
+#include "deck.h"
+
 typedef struct
 {
-  int healthbar;
-  int shieldbar;
-  // Deck deck; -> implementar quando for mexer com o deck
+  Stats *player_stats;
+  Deck *deck;
 } Player;
 
-Player *createPlayer();
+Player *createPlayer(int init_healt, int init_shield);
+
+void freePlayer(Player *player);
 
 #endif

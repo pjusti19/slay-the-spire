@@ -2,7 +2,15 @@
 #define _DECK_H_
 
 #include "card.h"
+#include <math.h>
 
-Card **createDeck();
+typedef struct{
+    Card **cards;
+    int deck_size;
+} Deck;
+
+Deck *createDeck();
+
+void discardCard(Deck *deck);
 
 #endif

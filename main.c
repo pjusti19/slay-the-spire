@@ -36,7 +36,7 @@ int main()
                            al_get_display_event_source(renderer.display));
 
   srand(time(NULL));
-  Player *player = createPlayer();
+  Player *player = createPlayer(100, 0);
 
   al_start_timer(timer);
   while (1)

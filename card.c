@@ -6,10 +6,7 @@ Card *createCard(CardType card_type, int cost)
 {
     Card *card = (Card *)malloc(sizeof(Card));
     if (card == NULL)
-    {
         allocFail("Card");
-        exit(1);
-    }
 
     card->card_type = card_type;
     if (card_type == SPECIAL)

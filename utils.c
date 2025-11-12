@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "constants.h"
+#include "deck.h"
 
 #include <allegro5/allegro5.h>
 #include <stdio.h>
@@ -69,4 +70,27 @@ void ShuffleArray(int *array, int size)
 void allocFail(char *struct_name)
 {
   printf("%s não pode ser alocado\n", struct_name);
+  printf("Encerrando o programa...\n");
+  exit(1);
+}
+
+void shuffleDeck(Deck *deck)
+{
+  if (deck->deck_size > 1)
+  {
+    int i;
+    for (i = 0; i < deck->deck_size - 1; i++)
+    {
+      int j = i + rand() / (RAND_MAX / (deck->deck_size - i) + 1);
+      if (j == i)
+      {
+        continue;
+      }
+      Card *card_j = deck->cards[j];
+
+      deck->cards[j] = deck->cards[i];
+
+      deck->cards[i] = card_j;
+    }
+  }
 }

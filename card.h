@@ -15,6 +15,6 @@ typedef struct
     CardType card_type;
 } Card;
 
-Card *createCard(CardType card_type);
+Card *createCard(CardType card_type, int cost);
 
 #endif

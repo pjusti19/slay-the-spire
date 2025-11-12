@@ -13,4 +13,6 @@ void ShuffleArray(int* array, int size);
 
 void allocFail(char* struct_name);
 
+void shuffleDeck(Deck *deck);
+
 #endif

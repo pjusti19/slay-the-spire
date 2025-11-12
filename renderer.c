@@ -96,7 +96,7 @@ void RenderPlayer(Player *player, const Renderer *renderer, int begin_x, int mid
   float x_end = begin_x + width;
 
   float health_bar_y = mid_y + width + 20;
-  RenderHealthBar(player->healthbar, begin_x, x_end, health_bar_y, renderer->font);
+  RenderHealthBar(player->player_stats->healthbar, begin_x, x_end, health_bar_y, renderer->font);
 
   // Suggestion: render enemy intents here.
 }
@@ -160,7 +160,7 @@ void Render(Renderer *renderer, Player *player)
 
 void ClearRenderer(Renderer *renderer, Player *player)
 {
-  free(player);
+  freePlayer(player);
   al_destroy_display(renderer->display);
   al_destroy_bitmap(renderer->display_buffer);
   al_destroy_font(renderer->font);

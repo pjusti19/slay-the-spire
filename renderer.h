@@ -5,6 +5,7 @@
 #include <allegro5/allegro_font.h>
 #include "player.h"
 #include "enemy.h"
+#include "deck.h"
 
 typedef struct
 {
