@@ -2,7 +2,7 @@
 #include "utils.h"
 #include <stdlib.h>
 
-Card *createCard(CardType card_type, int cost)
+Card *createCard(ActionType card_type, int cost)
 {
     Card *card = (Card *)malloc(sizeof(Card));
     if (card == NULL)

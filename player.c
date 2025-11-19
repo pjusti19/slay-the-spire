@@ -1,6 +1,8 @@
 #include "player.h"
+#include "constants.h"
 #include "utils.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 Player *createPlayer(int init_health, int init_shield)
 {
@@ -9,12 +11,14 @@ Player *createPlayer(int init_health, int init_shield)
     allocFail("Player");
 
   player->player_stats = createStats(init_health, init_shield);
-  player->deck = createDeck();
+  player->deck = createDeck(MAX_DECK_STACK, true);
+  player->hand = createDeck(MAX_HAND_STACK, false);
   return player;
 }
 
 void freePlayer(Player *player)
 {
+  // deck
   for (int i = 0; i < player->deck->deck_size; i++)
   {
     if (player->deck->cards[i] != NULL)
@@ -22,6 +26,16 @@ void freePlayer(Player *player)
   }
   free(player->deck->cards);
   free(player->deck);
+  // hand
+  for (int i = 0; i < player->hand->deck_size; i++)
+  {
+    if (player->hand->cards[i] != NULL)
+      free(player->hand->cards[i]);
+  }
+  free(player->hand->cards);
+  free(player->hand);
+  //
   free(player->player_stats);
   free(player);
+  printf("Player desalocado\n");
 }

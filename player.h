@@ -8,6 +8,8 @@ typedef struct
 {
   Stats *player_stats;
   Deck *deck;
+  Deck *hand;
+  int energy;
 } Player;
 
 Player *createPlayer(int init_healt, int init_shield);

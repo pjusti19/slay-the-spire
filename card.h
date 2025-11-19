@@ -6,15 +6,15 @@ typedef enum
     DEFENSE = 1,
     ATTACK = 2,
     SPECIAL = 3,
-} CardType;
+} ActionType;
 
 typedef struct
 {
     int cost;
     int effect_rate;
-    CardType card_type;
+    ActionType card_type;
 } Card;
 
-Card *createCard(CardType card_type, int cost);
+Card *createCard(ActionType card_type, int cost);
 
 #endif

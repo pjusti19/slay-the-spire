@@ -1,13 +1,7 @@
 #ifndef _ACTIONS_H_
 #define _ACTIONS_H_
 
-#include "enemy.h"
-
-typedef enum
-{
-    DEFENSE = 1,
-    ATTACK = 2,
-} ActionType;
+#include "card.h"
 
 typedef struct{
     ActionType action_type;

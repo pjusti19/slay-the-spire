@@ -27,11 +27,11 @@
 #define HEALTH_BAR_RX 0
 #define HEALTH_BAR_RY 0
 
-#define HAND_BEGIN_X 350
-#define HAND_BEGIN_Y 330
+#define HAND_BEGIN_X 180
+#define HAND_BEGIN_Y 380
 
-#define CARD_WIDTH 120
-#define CARD_HEIGHT 170
+#define CARD_WIDTH 100
+#define CARD_HEIGHT 130
 
 // You might want to use this.
 typedef enum
@@ -39,5 +39,17 @@ typedef enum
   MOVE_LEFT = 0,
   MOVE_RIGHT = 1,
 } CursorMovementDirection;
+
+#define ENERGY_GAUGE_BEGIN_X 50
+#define ENERGY_GAUGE_BEGIN_Y 320
+#define ENERGY_GAUGE_RADIUS 30
+
+#define MAX_DECK_STACK 20
+#define MAX_HAND_STACK 5
+
+#define PLAYER_MAX_HEALTH 100
+#define PLAYER_INIT_SHIELD 0
+
+#define DEFAULT_ENEMY_GROUP_SIZE 2
 
 #endif

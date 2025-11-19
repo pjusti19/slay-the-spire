@@ -8,8 +8,7 @@
 #include "constants.h"
 #include "renderer.h"
 #include "utils.h"
-#include "player.h"
-#include "enemy.h"
+#include "combat.h"
 
 int main()
 {
@@ -36,7 +35,7 @@ int main()
                            al_get_display_event_source(renderer.display));
 
   srand(time(NULL));
-  Player *player = createPlayer(100, 0);
+  Combat *combat = createCombat(DEFAULT_ENEMY_GROUP_SIZE);
 
   al_start_timer(timer);
   while (1)
@@ -77,12 +76,12 @@ int main()
     // You want to put your combat logic here.
     if (redraw)
     {
-      Render(&renderer, player);
+      Render(&renderer, combat);
       redraw = 0;
     }
   }
   al_destroy_timer(timer);
   al_destroy_event_queue(queue);
-  ClearRenderer(&renderer, player);
+  ClearRenderer(&renderer, combat);
   return 0;
 }

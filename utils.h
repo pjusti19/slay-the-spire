@@ -2,6 +2,7 @@
 #define _UTILS_H_
 
 #include <stdlib.h>
+#include "deck.h"
 
 void must_init(_Bool test, const char* description);
 

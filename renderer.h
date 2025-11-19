@@ -6,6 +6,7 @@
 #include "player.h"
 #include "enemy.h"
 #include "deck.h"
+#include "combat.h"
 
 typedef struct
 {
@@ -18,8 +19,8 @@ typedef struct
 
 void FillRenderer(Renderer *renderer);
 
-void Render(Renderer *renderer, Player *player);
+void Render(Renderer *renderer, Combat *combat);
 
-void ClearRenderer(Renderer *renderer, Player *player);
+void ClearRenderer(Renderer *renderer, Combat *combat);
 
 #endif

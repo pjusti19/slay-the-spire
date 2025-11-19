@@ -3,14 +3,15 @@
 
 #include "card.h"
 #include <math.h>
+#include <stdbool.h>
 
 typedef struct{
     Card **cards;
     int deck_size;
 } Deck;
 
-Deck *createDeck();
+Deck *createDeck(int deck_size, bool __create_cards);
 
-void discardCard(Deck *deck);
+void discardCard(Deck *deck, int card_number);
 
 #endif
