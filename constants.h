@@ -11,22 +11,32 @@
 #define DISPLAY_WIDTH DISPLAY_SCALE *DISPLAY_BUFFER_WIDTH
 #define DISPLAY_HEIGHT DISPLAY_SCALE *DISPLAY_BUFFER_HEIGHT
 
+// Player
+#define PLAYER_BEGIN_X 200
+#define PLAYER_BEGIN_Y 100
+#define PLAYER_RADIUS 100
+
+#define MAX_DECK_STACK 20
+#define MAX_HAND_STACK 5
+#define PLAYER_MAX_HEALTH 100
+#define PLAYER_INIT_SHIELD 0
+
+// Deck
 #define DRAW_DECK_X 15
 #define DRAW_DECK_Y 400
 
 #define DECK_WIDTH 80
 #define DECK_HEIGHT 80
 
-#define PLAYER_BEGIN_X 200
-#define PLAYER_BEGIN_Y 100
-#define PLAYER_RADIUS 100
 
+//Health Bar
 #define HEALTH_BAR_HEIGHT 20
 #define HEALTH_BAR_BACKGROUND_EXTRA 1
 
 #define HEALTH_BAR_RX 0
 #define HEALTH_BAR_RY 0
 
+//Player Hand
 #define HAND_BEGIN_X 180
 #define HAND_BEGIN_Y 380
 
@@ -40,16 +50,21 @@ typedef enum
   MOVE_RIGHT = 1,
 } CursorMovementDirection;
 
+// Energy
 #define ENERGY_GAUGE_BEGIN_X 50
 #define ENERGY_GAUGE_BEGIN_Y 320
 #define ENERGY_GAUGE_RADIUS 30
 
-#define MAX_DECK_STACK 20
-#define MAX_HAND_STACK 5
-
-#define PLAYER_MAX_HEALTH 100
-#define PLAYER_INIT_SHIELD 0
-
+// Enemies
 #define DEFAULT_ENEMY_GROUP_SIZE 2
+
+#define ENEMY_BEGIN_X 550
+#define ENEMY_BEGIN_Y 120
+
+#define ENEMY_WIDTH 100
+#define ENEMY_HEIGHT 150
+
+// View
+#define COLOR_BLACK al_map_rgb(0,0,0)
 
 #endif

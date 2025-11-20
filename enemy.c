@@ -18,6 +18,7 @@ Enemy *createEnemy(EnemyType enemy_type)
   case WEAK:
     enemy->enemy_stats = createStats(10 + rand() % 21, 0);
     enemy->number_of_actions = 1 + rand() % 2;
+    break;
   case STRONG:
     enemy->enemy_stats = createStats(40 + rand() % 61, 0);
     enemy->number_of_actions = 2 + rand() % 2;

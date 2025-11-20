@@ -31,12 +31,11 @@ int main()
 
   Renderer renderer;
   FillRenderer(&renderer);
-  al_register_event_source(queue,
-                           al_get_display_event_source(renderer.display));
+  al_register_event_source(queue, al_get_display_event_source(renderer.display));
 
   srand(time(NULL));
-  Combat *combat = createCombat(DEFAULT_ENEMY_GROUP_SIZE);
-
+  renderer.combat = createCombat(DEFAULT_ENEMY_GROUP_SIZE);
+  printf("vida do camarada: %d\n", renderer.combat->enemy_group->enemies[0]->enemy_stats->healthbar);
   al_start_timer(timer);
   while (1)
   {
@@ -76,12 +75,12 @@ int main()
     // You want to put your combat logic here.
     if (redraw)
     {
-      Render(&renderer, combat);
+      Render(&renderer);
       redraw = 0;
     }
   }
   al_destroy_timer(timer);
   al_destroy_event_queue(queue);
-  ClearRenderer(&renderer, combat);
+  ClearRenderer(&renderer);
   return 0;
 }

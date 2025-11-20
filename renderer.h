@@ -12,15 +12,15 @@ typedef struct
 {
   ALLEGRO_DISPLAY *display;
   ALLEGRO_BITMAP *display_buffer;
-
+  Combat *combat;
   ALLEGRO_FONT *font;
 
 } Renderer;
 
 void FillRenderer(Renderer *renderer);
 
-void Render(Renderer *renderer, Combat *combat);
+void Render(Renderer *renderer);
 
-void ClearRenderer(Renderer *renderer, Combat *combat);
+void ClearRenderer(Renderer *renderer);
 
 #endif
