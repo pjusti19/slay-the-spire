@@ -5,10 +5,10 @@
 
 typedef struct{
     Enemy **enemies;
-    int enemies_amount;
+    int enemy_amount;
 } EnemyGroup;
 
-EnemyGroup *createEnemyGroup(int enemies_amount);
+EnemyGroup *createEnemyGroup(int enemy_amount);
 
 void freeEnemyGroup(EnemyGroup *enemy_group);
 

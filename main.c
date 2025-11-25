@@ -12,6 +12,9 @@
 
 int main()
 {
+  srand(time(NULL));
+
+  // Allegro stuff
   must_init(al_init(), "allegro");
   must_init(al_init_image_addon(), "allegro");
   must_init(al_init_primitives_addon(), "primitives");
@@ -29,18 +32,27 @@ int main()
   ClearKeyboardKeys(keyboard_keys);
   ALLEGRO_EVENT event;
 
+  // Structs
   Renderer renderer;
   FillRenderer(&renderer);
   al_register_event_source(queue, al_get_display_event_source(renderer.display));
 
-  srand(time(NULL));
-  renderer.combat = createCombat(DEFAULT_ENEMY_GROUP_SIZE);
-  printf("vida do camarada: %d\n", renderer.combat->enemy_group->enemies[0]->enemy_stats->healthbar);
+  Player *player = createPlayer(PLAYER_MAX_HEALTH, PLAYER_INIT_SHIELD);
+
+  renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE);
+
+  // Combat aux variables
+  int actual_floor = 1;
+  bool __has_enter_been_pressed = false;
   al_start_timer(timer);
   while (1)
   {
     al_wait_for_event(queue, &event);
     int done = 0, print_combat = 0, redraw = 0;
+
+    // Combat for the new accessed floor
+    if (renderer.combat == NULL && actual_floor <= 10)
+      renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE);
 
     switch (event.type)
     {
@@ -51,7 +63,45 @@ int main()
         done = 1;
         break;
       }
+      if (__has_enter_been_pressed == false)
+      {
+        if (keyboard_keys[ALLEGRO_KEY_LEFT] & GAME_KEY_SEEN)
+          if (renderer.combat->pointed_card - 1 >= 0)
+            renderer.combat->pointed_card--;
 
+        if (keyboard_keys[ALLEGRO_KEY_RIGHT] & GAME_KEY_SEEN)
+          if (renderer.combat->pointed_card + 1 < renderer.combat->player->hand->deck_size)
+            renderer.combat->pointed_card++;
+      }
+      else // VAI DAR BO DPS QUANDO MORRER O INIMIGO 0
+      {
+        if (keyboard_keys[ALLEGRO_KEY_LEFT] & GAME_KEY_SEEN)
+          if (renderer.combat->pointed_enemy - 1 >= -1)
+          {
+            renderer.combat->pointed_enemy--;
+            printf("inimigo atual: %d\n", renderer.combat->pointed_enemy);
+          }
+
+        if (keyboard_keys[ALLEGRO_KEY_RIGHT] & GAME_KEY_SEEN)
+          if (renderer.combat->pointed_enemy + 1 < renderer.combat->enemy_group->enemy_amount)
+          {
+            renderer.combat->pointed_enemy++;
+            printf("inimigo atual: %d\n", renderer.combat->pointed_enemy);
+          }
+      }
+      if (keyboard_keys[ALLEGRO_KEY_ENTER] & GAME_KEY_SEEN)
+      {
+        if (__has_enter_been_pressed == false)
+          __has_enter_been_pressed = true;
+        else
+        {
+          // execution logic here
+        }
+      }
+      if (keyboard_keys[ALLEGRO_KEY_C])
+      {
+        __has_enter_been_pressed = false;
+      }
       for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
       {
         keyboard_keys[i] &= ~GAME_KEY_SEEN;
@@ -72,7 +122,13 @@ int main()
     {
       break;
     }
-    // You want to put your combat logic here.
+    if (renderer.combat->__is_player_turn == true)
+    {
+    }
+    else
+    {
+      renderer.combat->__is_player_turn = true;
+    }
     if (redraw)
     {
       Render(&renderer);

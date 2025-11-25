@@ -14,10 +14,10 @@
 // Player
 #define PLAYER_BEGIN_X 200
 #define PLAYER_BEGIN_Y 100
-#define PLAYER_RADIUS 100
+#define PLAYER_RADIUS 80
 
 #define MAX_DECK_STACK 20
-#define MAX_HAND_STACK 5
+#define DEFAULT_HAND_STACK 5
 #define PLAYER_MAX_HEALTH 100
 #define PLAYER_INIT_SHIELD 0
 
@@ -62,7 +62,7 @@ typedef enum
 #define ENEMY_BEGIN_Y 120
 
 #define ENEMY_WIDTH 100
-#define ENEMY_HEIGHT 150
+#define ENEMY_HEIGHT 100
 
 // View
 #define COLOR_BLACK al_map_rgb(0,0,0)

@@ -17,6 +17,7 @@ typedef struct
   EnemyType enemy_type;
   Action **actions;
   int number_of_actions;
+  int actual_action;
   
 } Enemy;
 

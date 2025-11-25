@@ -12,6 +12,8 @@ typedef struct{
 
 Deck *createDeck(int deck_size, bool __create_cards);
 
+void buyHandCards(Deck *deck, Deck *hand, int bought_cards);
+
 void discardCard(Deck *deck, int card_number);
 
 #endif

@@ -12,12 +12,13 @@ Deck *createDeck(int deck_size, bool __create_cards)
 
     deck->deck_size = deck_size;
 
-    deck->cards = (Card **)malloc(deck->deck_size * sizeof(Card *));
-    if (deck->cards == NULL)
-        allocFail("Cards");
-
     if (__create_cards == true)
     {
+
+        deck->cards = (Card **)malloc(deck->deck_size * sizeof(Card *));
+        if (deck->cards == NULL)
+            allocFail("Cards");
+
         for (int i = 0; i < deck->deck_size; i++)
         {
             if (i < 6)
@@ -31,15 +32,57 @@ Deck *createDeck(int deck_size, bool __create_cards)
             else
                 deck->cards[i] = createCard(SPECIAL, 0);
         }
-
         shuffleDeck(deck);
     }
+    else
+        deck->cards = NULL; // hand initialization
+
     return deck;
+}
+
+void buyHandCards(Deck *deck, Deck *hand, int bought_cards)
+{
+    int old_hand_size = hand->deck_size;
+    int new_hand_size;
+
+    if (deck->deck_size - bought_cards < 0)
+    {
+        new_hand_size = old_hand_size + deck->deck_size;
+        // embaralhaPilhaDescarte
+    }
+    else
+        new_hand_size = old_hand_size + bought_cards;
+
+    if (hand->cards == NULL)
+    {
+        hand->cards = (Card **)malloc(new_hand_size * sizeof(Card *));
+        if (hand->cards == NULL)
+            allocFail("Hand malloc");
+    }
+    else
+    {
+        Card **temp = realloc(hand->cards, new_hand_size * sizeof(Card *));
+        if (temp == NULL)
+            allocFail("Hand realloc");
+        hand->cards = temp;
+    }
+
+    hand->deck_size = new_hand_size;
+
+    for (int i = old_hand_size; i < new_hand_size; i++)
+    {
+        int bought_card = rand() % deck->deck_size;
+        hand->cards[i] = deck->cards[bought_card];
+        discardCard(deck, bought_card);
+    }
 }
 
 void discardCard(Deck *deck, int card_number)
 {
+    // Moving the bought card to an inactive area of the deck
+    Card *removed = deck->cards[card_number];
+    deck->cards[card_number] = deck->cards[deck->deck_size - 1];
+    deck->cards[deck->deck_size - 1] = removed;
+
     deck->deck_size--;
-    free(deck->cards[card_number]);
-    shuffleDeck(deck);
 }

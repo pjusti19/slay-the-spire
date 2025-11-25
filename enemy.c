@@ -11,6 +11,7 @@ Enemy *createEnemy(EnemyType enemy_type)
     allocFail("Enemy");
 
   enemy->enemy_type = enemy_type;
+  enemy->actual_action = 0;
 
   int i = 0;
   switch (enemy->enemy_type)

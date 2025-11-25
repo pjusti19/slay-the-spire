@@ -10,9 +10,11 @@ Player *createPlayer(int init_health, int init_shield)
   if (player == NULL)
     allocFail("Player");
 
+  player->energy = 0;
   player->player_stats = createStats(init_health, init_shield);
   player->deck = createDeck(MAX_DECK_STACK, true);
-  player->hand = createDeck(MAX_HAND_STACK, false);
+  player->hand = createDeck(0, false);
+  buyHandCards(player->deck, player->hand, DEFAULT_HAND_STACK); // será movido pro "beginTurn" do combat.c quando terminar de implementar a função
   return player;
 }
 
@@ -37,5 +39,4 @@ void freePlayer(Player *player)
   //
   free(player->player_stats);
   free(player);
-  printf("Player desalocado\n");
 }

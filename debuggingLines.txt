@@ -9,3 +9,20 @@
       printf("tipo da carta: %d, custo: %d, efeito: %d\n", player->deck->cards[i]->card_type, player->deck->cards[i]->cost, player->deck->cards[i]->effect_rate);
 
       CONFERIR SE AS CARTAS VIERAM COM TIPO, EFEITO E CUSTO CERTO! (FUNCIONOU)
+
+
+  for(int i = 0; i < player->hand->deck_size; i++)
+    printf("CRIAÇÃO tipo: %d efeito: %d custo: %d\n\n", player->hand->cards[i]->card_type, player->hand->cards[i]->effect_rate, player->hand->cards[i]->cost);
+
+    OLHAR A CRIAÇÃO DA MÃO (CORRIGIDO)
+
+
+void RenderPlayerHand(Renderer *renderer)
+{
+  for (int i = 0; i < renderer->combat->player->hand->deck_size; i++)
+  {
+    printf("carta %d:\n", i + 1);
+    printf("tipo: %d efeito: %d custo: %d\n\n", renderer->combat->player->hand->cards[i]->card_type, renderer->combat->player->hand->cards[i]->effect_rate, renderer->combat->player->hand->cards[i]->cost);
+    RenderCard(renderer, HAND_BEGIN_X + i * 120, HAND_BEGIN_Y, renderer->combat->player->hand->cards[i]);
+  }
+}   DEBUGAR A RENDERIZAÇÃO DAS CARTAS (CORRIGIDO-> TAVA DANDO FREE NA CARTA DO DECK QUE ESTAVA REFERENCIADA NA MÃO)

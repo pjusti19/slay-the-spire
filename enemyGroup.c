@@ -5,20 +5,19 @@
 #include <stdio.h>
 #include "utils.h"
 
-// FALTA O FREE!!!!!!!!!
-EnemyGroup *createEnemyGroup(int enemies_amount)
+EnemyGroup *createEnemyGroup(int enemy_amount)
 {
 
     EnemyGroup *enemy_group = (EnemyGroup *)malloc(sizeof(EnemyGroup));
     if (enemy_group == NULL)
         allocFail("Enemy Group");
-    enemy_group->enemies_amount = enemies_amount;
-    enemy_group->enemies = (Enemy **)malloc(enemy_group->enemies_amount * sizeof(Enemy *));
+    enemy_group->enemy_amount = enemy_amount;
+    enemy_group->enemies = (Enemy **)malloc(enemy_group->enemy_amount * sizeof(Enemy *));
     if (enemy_group->enemies == NULL)
         allocFail("Enemy group enemies");
     int drawed_number = -1;
     bool __has_created_strong_enemy = false;
-    for (int i = 0; i < enemy_group->enemies_amount; i++)
+    for (int i = 0; i < enemy_group->enemy_amount; i++)
     {
         if (__has_created_strong_enemy == false)
         {
@@ -37,10 +36,12 @@ EnemyGroup *createEnemyGroup(int enemies_amount)
     return enemy_group;
 }
 
-// IMPLEMENTAR:
-// void freeEnemyGroup(EnemyGroup *enemy_group){
-//    for(int i = 0; i < enemy_group->enemies_amount; i++){
-//     for(int j = 0; j < 2; j++)
-//    }
-
-// }
+void freeEnemyGroup(EnemyGroup *enemy_group)
+{
+    for (int i = 0; i < enemy_group->enemy_amount; i++)
+    {
+        free(enemy_group->enemies[i]->enemy_stats);
+        for (int j = 0; j < enemy_group->enemies[i]->number_of_actions; j++)
+            free(enemy_group->enemies[i]->actions[j]);
+    }
+}
