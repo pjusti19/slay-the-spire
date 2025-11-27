@@ -7,13 +7,17 @@ PATH_ALLEGRO=$(FOLDER)$(FOLDER_NAME)
 LIB_ALLEGRO=$(PATH_ALLEGRO)/lib/liballegro-$(ALLEGRO_VERSION)-monolith-mt.a
 INCLUDE_ALLEGRO=$(PATH_ALLEGRO)/include
 
-all: game.exe
+all: clean game.exe run
 
-game.exe: main.o renderer.o utils.o player.o enemy.o card.o deck.o stats.o enemyGroup.o action.o combat.o
+
+clean:
+	del *.o game.exe
+
+game.exe: main.o renderer.o utils.o player.o enemy.o card.o deck.o stats.o enemyGroup.o combat.o
 	gcc -o game.exe $^ $(LIB_ALLEGRO) -lm
 
 %.o: %.c
 	gcc -I $(INCLUDE_ALLEGRO) -c $<
 
-clean:
-	del *.o game.exe
+run: 
+	.\game.exe

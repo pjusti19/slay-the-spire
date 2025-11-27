@@ -5,10 +5,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "constants.h"
 #include "renderer.h"
+#include "constants.h"
 #include "utils.h"
-#include "combat.h"
 
 int main()
 {
@@ -43,27 +42,62 @@ int main()
 
   // Combat aux variables
   int actual_floor = 1;
-  bool __has_enter_been_pressed = false;
   al_start_timer(timer);
   while (1)
   {
     al_wait_for_event(queue, &event);
     int done = 0, print_combat = 0, redraw = 0;
 
-    // Combat for the new accessed floor
-    if (renderer.combat == NULL && actual_floor <= 10)
-      renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE);
+    if (renderer.combat->enemies_left == 0)
+    {
+      printf("passou o nivel %d!\n", actual_floor);
+      actual_floor++;
+      if (actual_floor <= 10)
+      {
+        freeCombat(renderer.combat);
+        renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE); // Combat for the new accessed floor
+      } 
+      else
+      {
+        printf("Vitoria!\n");
+        done = 1;
+      }
+    }
+    if (renderer.combat->player->player_stats->healthbar <= 0)
+    {
+      printf("Derrota...\n");
+      done = 1;
+    }
 
     switch (event.type)
     {
     case ALLEGRO_EVENT_TIMER:
       redraw = 1;
+      // Q LOGIC
       if (keyboard_keys[ALLEGRO_KEY_Q])
       {
         done = 1;
         break;
       }
-      if (__has_enter_been_pressed == false)
+      if (keyboard_keys[ALLEGRO_KEY_X] & GAME_KEY_SEEN)
+      {
+        renderer.combat->player->player_stats->healthbar = 1;
+      }
+      // SPACE LOGIC
+      if (keyboard_keys[ALLEGRO_KEY_SPACE] & GAME_KEY_SEEN)
+      {
+        for (int i = 0; i < renderer.combat->enemy_group->enemy_amount; i++)
+          renderer.combat->enemy_group->enemies[i]->enemy_stats->healthbar = 0;
+        renderer.combat->enemies_left = 0;
+      }
+      // ESC LOGIC
+      if (keyboard_keys[ALLEGRO_KEY_ESCAPE] & GAME_KEY_SEEN)
+      {
+        transferCards(renderer.combat->player->hand, renderer.combat->player->discard_stack);
+        enemyTurn(renderer.combat);
+      }
+      // ARROWS LOGIC
+      if (renderer.combat->__has_enter_been_pressed == false && renderer.combat->__has_passive_card_been_used == false)
       {
         if (keyboard_keys[ALLEGRO_KEY_LEFT] & GAME_KEY_SEEN)
           if (renderer.combat->pointed_card - 1 >= 0)
@@ -73,10 +107,10 @@ int main()
           if (renderer.combat->pointed_card + 1 < renderer.combat->player->hand->deck_size)
             renderer.combat->pointed_card++;
       }
-      else // VAI DAR BO DPS QUANDO MORRER O INIMIGO 0
+      else
       {
         if (keyboard_keys[ALLEGRO_KEY_LEFT] & GAME_KEY_SEEN)
-          if (renderer.combat->pointed_enemy - 1 >= -1)
+          if (renderer.combat->pointed_enemy - 1 >= 0)
           {
             renderer.combat->pointed_enemy--;
             printf("inimigo atual: %d\n", renderer.combat->pointed_enemy);
@@ -89,18 +123,38 @@ int main()
             printf("inimigo atual: %d\n", renderer.combat->pointed_enemy);
           }
       }
+      // ENTER LOGIC
       if (keyboard_keys[ALLEGRO_KEY_ENTER] & GAME_KEY_SEEN)
       {
-        if (__has_enter_been_pressed == false)
-          __has_enter_been_pressed = true;
-        else
+        if (renderer.combat->__has_enter_been_pressed == false && renderer.combat->__has_passive_card_been_used == false)
         {
-          // execution logic here
+          if (renderer.combat->player->hand->cards[renderer.combat->pointed_card]->card_type == ATTACK)
+          {
+            if (renderer.combat->enemies_left > 0)
+            {
+              renderer.combat->pointed_enemy = getFirstAliveEnemy(renderer.combat->enemy_group);
+              renderer.combat->__has_enter_been_pressed = true;
+            }
+          }
+          else
+          {
+            renderer.combat->__has_passive_card_been_used = true;
+          }
+        }
+        else if (((renderer.combat->__has_enter_been_pressed == true) || (renderer.combat->__has_passive_card_been_used == true)) && renderer.combat->player->energy >= renderer.combat->player->hand->cards[renderer.combat->pointed_card]->cost)
+        {
+          renderer.combat->__has_enter_been_pressed = false;
+          renderer.combat->__has_passive_card_been_used = false;
+          renderer.combat->player->energy -= renderer.combat->player->hand->cards[renderer.combat->pointed_card]->cost;
+          applyAction(renderer.combat, renderer.combat->player->hand->cards[renderer.combat->pointed_card],
+                      renderer.combat->player->player_stats, renderer.combat->enemy_group->enemies[renderer.combat->pointed_enemy]->enemy_stats);
         }
       }
+      // CANCEL ACTION LOGIC (EXTRA)
       if (keyboard_keys[ALLEGRO_KEY_C])
       {
-        __has_enter_been_pressed = false;
+        renderer.combat->__has_enter_been_pressed = false;
+        renderer.combat->__has_passive_card_been_used = false;
       }
       for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
       {
@@ -121,13 +175,6 @@ int main()
     if (done)
     {
       break;
-    }
-    if (renderer.combat->__is_player_turn == true)
-    {
-    }
-    else
-    {
-      renderer.combat->__is_player_turn = true;
     }
     if (redraw)
     {

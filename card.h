@@ -1,6 +1,8 @@
 #ifndef _CARD_H_
 #define _CARD_H_
 
+#include <stdbool.h>
+
 typedef enum
 {
     DEFENSE = 1,

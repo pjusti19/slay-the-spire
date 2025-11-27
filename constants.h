@@ -22,7 +22,7 @@
 #define PLAYER_INIT_SHIELD 0
 
 // Deck
-#define DRAW_DECK_X 15
+#define DRAW_DECK_X 30
 #define DRAW_DECK_Y 400
 
 #define DECK_WIDTH 80
@@ -66,5 +66,8 @@ typedef enum
 
 // View
 #define COLOR_BLACK al_map_rgb(0,0,0)
+#define COLOR_WHITE al_map_rgb(255,255,255)
+#define COLOR_RED al_map_rgb(255, 0, 0)
+#define COLOR_AQUA_BLUE al_map_rgb(105, 237, 255)
 
 #endif

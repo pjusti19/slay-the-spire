@@ -26,3 +26,23 @@ void RenderPlayerHand(Renderer *renderer)
     RenderCard(renderer, HAND_BEGIN_X + i * 120, HAND_BEGIN_Y, renderer->combat->player->hand->cards[i]);
   }
 }   DEBUGAR A RENDERIZAÇÃO DAS CARTAS (CORRIGIDO-> TAVA DANDO FREE NA CARTA DO DECK QUE ESTAVA REFERENCIADA NA MÃO)
+
+
+  for (int i = 0; i < 15; i++)
+    printf("stack %d %d\n", i, player->stack->cards[i]->cost);
+
+    TESTE DE CÓPIA DA MÃO (FUNCIONANDO!)
+
+
+for (int i = 0; i < 2; i++)
+    {
+        printf("\nesse eh o %d\n", i);
+        printf("tamanho: %d\n", combat->enemy_group->enemies[i]->actions->deck_size);
+        for (int j = 0; j < combat->enemy_group->enemies[i]->actions->deck_size; j++)
+        {
+
+            printf("tipo: %d custo: %d efeito: %d\n", combat->enemy_group->enemies[i]->actions->cards[j]->card_type, combat->enemy_group->enemies[i]->actions->cards[j]->cost, combat->enemy_group->enemies[i]->actions->cards[j]->effect_rate);
+        }
+    }
+
+    verificando a criação de ações dos inimigos (deu certo)

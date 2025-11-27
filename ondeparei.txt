@@ -1,5 +1,0 @@
-ONDE EU PAREI:
-
-1- Fazer a aplicação dos efetios da carta
-2- Pilha de descarte
-3- Colocar a lógica dos turnos pra rodar

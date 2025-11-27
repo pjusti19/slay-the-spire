@@ -10,6 +10,8 @@ typedef struct{
 
 EnemyGroup *createEnemyGroup(int enemy_amount);
 
+int getFirstAliveEnemy(EnemyGroup *enemy_group);
+
 void freeEnemyGroup(EnemyGroup *enemy_group);
 
 #endif

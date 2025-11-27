@@ -8,7 +8,9 @@ typedef struct
 {
   Stats *player_stats;
   Deck *deck;
+  Deck *stack;
   Deck *hand;
+  Deck *discard_stack;
   int energy;
 } Player;
 

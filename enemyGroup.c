@@ -36,12 +36,23 @@ EnemyGroup *createEnemyGroup(int enemy_amount)
     return enemy_group;
 }
 
+int getFirstAliveEnemy(EnemyGroup *enemy_group)
+{
+    int i;
+    for(i = 0; i < enemy_group->enemy_amount; i++)
+        if(enemy_group->enemies[i]->enemy_stats->healthbar > 0)
+            break;
+
+    return i;
+}
+
 void freeEnemyGroup(EnemyGroup *enemy_group)
 {
     for (int i = 0; i < enemy_group->enemy_amount; i++)
     {
         free(enemy_group->enemies[i]->enemy_stats);
-        for (int j = 0; j < enemy_group->enemies[i]->number_of_actions; j++)
-            free(enemy_group->enemies[i]->actions[j]);
+        for (int j = 0; j < enemy_group->enemies[i]->actions->deck_size; j++)
+            free(enemy_group->enemies[i]->actions->cards[j]);
+        free(enemy_group->enemies[i]->actions);
     }
 }

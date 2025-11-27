@@ -12,31 +12,22 @@ Player *createPlayer(int init_health, int init_shield)
 
   player->energy = 0;
   player->player_stats = createStats(init_health, init_shield);
+  player->player_stats->entity_type = PLAYER;
   player->deck = createDeck(MAX_DECK_STACK, true);
   player->hand = createDeck(0, false);
-  buyHandCards(player->deck, player->hand, DEFAULT_HAND_STACK); // será movido pro "beginTurn" do combat.c quando terminar de implementar a função
+  player->discard_stack = createDeck(0, false);
+  player->discard_stack->cards = (Card **)malloc(20 * sizeof(Card *));
+  player->discard_stack->deck_size = 0;
   return player;
 }
 
 void freePlayer(Player *player)
 {
-  // deck
-  for (int i = 0; i < player->deck->deck_size; i++)
-  {
-    if (player->deck->cards[i] != NULL)
-      free(player->deck->cards[i]);
-  }
-  free(player->deck->cards);
+  freeDeckCards(player->deck);
   free(player->deck);
-  // hand
-  for (int i = 0; i < player->hand->deck_size; i++)
-  {
-    if (player->hand->cards[i] != NULL)
-      free(player->hand->cards[i]);
-  }
-  free(player->hand->cards);
+  free(player->stack);
   free(player->hand);
-  //
+  free(player->discard_stack);
   free(player->player_stats);
   free(player);
 }

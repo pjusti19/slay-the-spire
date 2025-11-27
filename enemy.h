@@ -2,7 +2,7 @@
 #define _ENEMY_H_
 
 #include "stats.h"
-#include "action.h"
+#include "deck.h"
 
 typedef enum
 {
@@ -15,8 +15,7 @@ typedef struct
 {
   Stats *enemy_stats;
   EnemyType enemy_type;
-  Action **actions;
-  int number_of_actions;
+  Deck *actions;
   int actual_action;
   
 } Enemy;

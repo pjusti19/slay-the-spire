@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "card.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 Deck *createDeck(int deck_size, bool __create_cards)
 {
@@ -40,15 +41,29 @@ Deck *createDeck(int deck_size, bool __create_cards)
     return deck;
 }
 
-void buyHandCards(Deck *deck, Deck *hand, int bought_cards)
+void transferCards(Deck *origin, Deck *destiny)
+{
+    int last = origin->deck_size - 1;
+    for (int i = last; i >= 0; i--)
+        discardCard(origin, &last, destiny);
+}
+
+void buyHandCards(Deck *stack, Deck *hand, Deck *discard_stack, int bought_cards)
 {
     int old_hand_size = hand->deck_size;
     int new_hand_size;
 
-    if (deck->deck_size - bought_cards < 0)
+    if (stack->deck_size == 0)
     {
-        new_hand_size = old_hand_size + deck->deck_size;
-        // embaralhaPilhaDescarte
+        shuffleDeck(discard_stack);
+        transferCards(discard_stack, stack);
+    }
+
+    if (stack->deck_size - bought_cards < 0)
+    {
+        new_hand_size = stack->deck_size;
+        shuffleDeck(discard_stack);
+        transferCards(discard_stack, stack);
     }
     else
         new_hand_size = old_hand_size + bought_cards;
@@ -71,18 +86,68 @@ void buyHandCards(Deck *deck, Deck *hand, int bought_cards)
 
     for (int i = old_hand_size; i < new_hand_size; i++)
     {
-        int bought_card = rand() % deck->deck_size;
-        hand->cards[i] = deck->cards[bought_card];
-        discardCard(deck, bought_card);
+        int bought_card = rand() % stack->deck_size;
+        hand->cards[i] = stack->cards[bought_card];
+        stack->cards[bought_card] = stack->cards[stack->deck_size - 1];
+        stack->cards[stack->deck_size - 1] = NULL;
+        stack->deck_size--;
     }
 }
 
-void discardCard(Deck *deck, int card_number)
+Deck *copyDeck(const Deck *src)
 {
-    // Moving the bought card to an inactive area of the deck
-    Card *removed = deck->cards[card_number];
-    deck->cards[card_number] = deck->cards[deck->deck_size - 1];
-    deck->cards[deck->deck_size - 1] = removed;
+    Deck *copy = malloc(sizeof(Deck));
+    if (copy == NULL)
+        allocFail("Deck copy");
 
-    deck->deck_size--;
+    copy->deck_size = src->deck_size;
+
+    copy->cards = malloc(sizeof(Card *) * src->deck_size);
+    if (copy->cards == NULL)
+        allocFail("Deck cards copy");
+
+    for (int i = 0; i < src->deck_size; i++)
+    {
+        if (src->cards[i] != NULL)
+        {
+            copy->cards[i] = malloc(sizeof(Card));
+            if (copy->cards[i] == NULL)
+                allocFail("Card copy");
+
+            *copy->cards[i] = *src->cards[i];
+        }
+        else
+        {
+            copy->cards[i] = NULL;
+        }
+    }
+
+    return copy;
+}
+
+void discardCard(Deck *hand, int *pointed_card, Deck *discard_stack)
+{
+    discard_stack->cards[discard_stack->deck_size] = hand->cards[*pointed_card];
+    discard_stack->deck_size++;
+
+    for (int i = *pointed_card; i < hand->deck_size - 1; i++)
+    {
+        Card *aux = hand->cards[i];
+        hand->cards[i] = hand->cards[i+1];
+        hand->cards[i+1] = aux;
+    }
+    hand->cards[hand->deck_size-1] = NULL;
+    hand->deck_size--;
+
+    if (*pointed_card >= hand->deck_size)
+        *pointed_card = hand->deck_size - 1;
+}
+
+void freeDeckCards(Deck *deck) // used for the deck itself + hand, stack and discarded_stack
+{
+    for (int i = 0; i < deck->deck_size; i++)
+    {
+        if (deck->cards[i] != NULL)
+            free(deck->cards[i]);
+    }
 }

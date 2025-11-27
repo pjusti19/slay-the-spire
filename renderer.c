@@ -54,7 +54,7 @@ void RenderBackground(Renderer *renderer)
   al_clear_to_color(COLOR_BLACK);
 }
 
-void RenderDeck(Renderer *renderer, int x_left, int y_top)
+void RenderStack(Renderer *renderer, int x_left, int y_top, Deck *stack)
 {
   ALLEGRO_BITMAP *prev_bmp_target = al_get_target_bitmap();
 
@@ -66,7 +66,7 @@ void RenderDeck(Renderer *renderer, int x_left, int y_top)
 
   float xscale = 1, yscale = 1;
   char text[100] = "";
-  sprintf(text, "Cards: %d", renderer->combat->player->deck->deck_size);
+  sprintf(text, "Cards: %d", stack->deck_size);
   DrawScaledText(renderer->font, COLOR_BLACK, (DECK_WIDTH * 0.5) / xscale,
                  (DECK_HEIGHT * 0.5) / yscale, xscale, yscale,
                  ALLEGRO_ALIGN_CENTER, text);
@@ -78,7 +78,7 @@ void RenderDeck(Renderer *renderer, int x_left, int y_top)
   al_destroy_bitmap(deck_bitmap);
 }
 
-void RenderHealthBar(int healthbar, float x_begin, float x_end, float y_down_left,
+void RenderHealthBar(Stats *stats, float x_begin, float x_end, float y_down_left,
                      ALLEGRO_FONT *font)
 {
   float mid_y = y_down_left - (HEALTH_BAR_HEIGHT * 0.78);
@@ -88,22 +88,39 @@ void RenderHealthBar(int healthbar, float x_begin, float x_end, float y_down_lef
       y_down_left - HEALTH_BAR_BACKGROUND_EXTRA,
       x_end + HEALTH_BAR_BACKGROUND_EXTRA,
       y_down_left - HEALTH_BAR_HEIGHT + HEALTH_BAR_BACKGROUND_EXTRA,
-      HEALTH_BAR_RX, HEALTH_BAR_RY, al_map_rgb(255, 255, 255));
+      HEALTH_BAR_RX, HEALTH_BAR_RY, COLOR_WHITE);
   char text[100] = "";
-  sprintf(text, "%d", healthbar);
-  float x_scale = 2.0, y_scale = 2.0;
+  sprintf(text, "%d/%d", stats->healthbar, stats->max_health);
+  float x_scale = 1.5, y_scale = 1.5;
   DrawScaledText(font, COLOR_BLACK, (x_begin + x_end) / 2.0 / x_scale,
                  mid_y / y_scale, x_scale, y_scale, ALLEGRO_ALIGN_CENTRE, text);
 }
 
 void RenderPlayer(const Renderer *renderer, int begin_x, int mid_y, int width)
 {
-  al_draw_filled_circle(begin_x + width / 2.0, mid_y, width,
-                        al_map_rgb(255, 255, 255));
-  float x_end = begin_x + width;
+  float px = begin_x + width / 2.0;
+  float py = mid_y;
+  float pr = width;
 
+  al_draw_filled_circle(px, py, pr, al_map_rgb(255, 255, 255));
+
+  if (renderer->combat->__has_passive_card_been_used)
+  {
+    float tip_x = px;
+    float tip_y = py - pr - 10;
+
+    al_draw_filled_triangle(
+        tip_x, tip_y,
+        tip_x - 20, tip_y - 30,
+        tip_x + 20, tip_y - 30,
+        al_map_rgb(255, 0, 0));
+  }
+
+  float x_end = begin_x + width;
   float health_bar_y = mid_y + width + 20;
-  RenderHealthBar(renderer->combat->player->player_stats->healthbar, begin_x, x_end, health_bar_y, renderer->font);
+
+  RenderHealthBar(renderer->combat->player->player_stats,
+                  begin_x, x_end, health_bar_y, renderer->font);
 }
 
 void RenderCard(const Renderer *renderer, int x_left, int y_top, Card *card, bool __is_card_pointed)
@@ -112,6 +129,7 @@ void RenderCard(const Renderer *renderer, int x_left, int y_top, Card *card, boo
   al_set_target_bitmap(card_bitmap);
 
   al_draw_filled_rounded_rectangle(10, 10, CARD_WIDTH - 10, CARD_HEIGHT - 10, 5, 5, al_map_rgb(255, 255, 255));
+
   al_draw_rounded_rectangle(10, 10, CARD_WIDTH - 10, CARD_HEIGHT - 10, 5, 5, al_map_rgb(255, 0, 0), 2);
 
   char card_type[20] = "";
@@ -167,7 +185,7 @@ void RenderPlayerHand(Renderer *renderer)
     bool __is_card_pointed = false;
     if (renderer->combat->pointed_card == i)
       __is_card_pointed = true;
-    RenderCard(renderer, HAND_BEGIN_X + i * 50, HAND_BEGIN_Y, renderer->combat->player->hand->cards[i], __is_card_pointed);
+    RenderCard(renderer, HAND_BEGIN_X + i * 120 + (60 * -(renderer->combat->player->hand->deck_size - DEFAULT_HAND_STACK)), HAND_BEGIN_Y, renderer->combat->player->hand->cards[i], __is_card_pointed);
   }
 }
 
@@ -191,14 +209,14 @@ void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
   if (enemy->enemy_type == 2)
     enemy_height += 70;
 
-if (renderer->combat->pointed_enemy == actual_enemy)
-{
+  if (renderer->combat->pointed_enemy == actual_enemy && renderer->combat->__has_enter_been_pressed == true)
+  {
     al_draw_filled_triangle(
-        x_left + ENEMY_WIDTH / 2.0, y_top - 10,   // ponta (embaixo, mais perto do inimigo)
+        x_left + ENEMY_WIDTH / 2.0, y_top - 10,      // ponta (embaixo, mais perto do inimigo)
         x_left + ENEMY_WIDTH / 2.0 - 20, y_top - 40, // base esquerda (em cima)
         x_left + ENEMY_WIDTH / 2.0 + 20, y_top - 40, // base direita (em cima)
         al_map_rgb(255, 0, 0));
-}
+  }
 
   ALLEGRO_BITMAP *prev_bmp_target = al_get_target_bitmap();
 
@@ -209,31 +227,38 @@ if (renderer->combat->pointed_enemy == actual_enemy)
   al_draw_rounded_rectangle(0, 0, ENEMY_WIDTH, enemy_height, 5, 5, al_map_rgb(255, 0, 0), 2);
 
   int actual_action = enemy->actual_action;
-  char action_type[10] = ""; // TENHO QUE ARRUMAR DEPOIS
-  switch (enemy->actions[actual_action]->action_type)
+  ALLEGRO_COLOR color;
+  char action_type[10] = "";
+  switch (enemy->actions->cards[actual_action]->card_type)
   {
   case ATTACK:
-    sprintf(action_type, "Vou atacar");
+    sprintf(action_type, "ATK");
+    color = COLOR_RED;
     break;
   case DEFENSE:
-    sprintf(action_type, "Vou defender");
+    sprintf(action_type, "DEF");
+    color = COLOR_AQUA_BLUE;
     break;
   }
-  //
-  float xscale = 1.0, yscale = 1.0;
-  DrawScaledText(renderer->font, COLOR_BLACK, (ENEMY_WIDTH * 0.5) / xscale,
-                 (enemy_height * 0.3) / yscale, xscale, yscale,
-                 ALLEGRO_ALIGN_CENTER, action_type);
 
   al_set_target_bitmap(prev_bmp_target);
 
   al_draw_scaled_bitmap(enemy_bitmap, 0, 0, ENEMY_WIDTH, enemy_height, x_left, y_top, ENEMY_WIDTH, enemy_height, 0);
 
+  float text_x = x_left + ENEMY_WIDTH - 5; // canto superior direito
+  float text_y = y_top - 10;
+
+  DrawScaledText(renderer->font, color,
+                 text_x, text_y,
+                 1.0, 1.0,
+                 ALLEGRO_ALIGN_RIGHT,
+                 action_type);
+
   al_destroy_bitmap(enemy_bitmap);
 
   float x_end = x_left + ENEMY_WIDTH;
   float health_bar_y = y_top + enemy_height + 20;
-  RenderHealthBar(enemy->enemy_stats->healthbar, x_left, x_end, health_bar_y, renderer->font);
+  RenderHealthBar(enemy->enemy_stats, x_left, x_end, health_bar_y, renderer->font);
 }
 
 void Render(Renderer *renderer)
@@ -242,8 +267,11 @@ void Render(Renderer *renderer)
 
   RenderBackground(renderer);
 
-  // if (combat->player->deck->deck_size > 0)
-  RenderDeck(renderer, DRAW_DECK_X, DRAW_DECK_Y);
+  if (renderer->combat->player->stack->deck_size > 0)
+    RenderStack(renderer, DRAW_DECK_X, DRAW_DECK_Y, renderer->combat->player->stack);
+
+  if (renderer->combat->player->discard_stack->deck_size > 0)
+    RenderStack(renderer, DRAW_DECK_X + 815, DRAW_DECK_Y, renderer->combat->player->discard_stack);
 
   RenderPlayer(renderer, PLAYER_BEGIN_X, PLAYER_BEGIN_Y + PLAYER_RADIUS, PLAYER_RADIUS);
 
@@ -266,8 +294,8 @@ void Render(Renderer *renderer)
 
 void ClearRenderer(Renderer *renderer)
 {
+  freeCombat(renderer->combat);
   freePlayer(renderer->combat->player);
-  freeEnemyGroup(renderer->combat->enemy_group);
   al_destroy_display(renderer->display);
   al_destroy_bitmap(renderer->display_buffer);
   al_destroy_font(renderer->font);

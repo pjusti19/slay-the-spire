@@ -1,0 +1,5 @@
+ONDE EU PAREI:
+
+1- deixar a barra de vida proporcional ao total
+2- desenhar o shield
+3- FAZER O EXTRA!

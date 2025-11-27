@@ -10,6 +10,10 @@ Enemy *createEnemy(EnemyType enemy_type)
   if (enemy == NULL)
     allocFail("Enemy");
 
+  enemy->actions = (Deck *)malloc(sizeof(Deck));
+  if (enemy->actions == NULL)
+    allocFail("Actions");
+
   enemy->enemy_type = enemy_type;
   enemy->actual_action = 0;
 
@@ -18,21 +22,23 @@ Enemy *createEnemy(EnemyType enemy_type)
   {
   case WEAK:
     enemy->enemy_stats = createStats(10 + rand() % 21, 0);
-    enemy->number_of_actions = 1 + rand() % 2;
+    enemy->enemy_stats->entity_type = ENEMY;
+    enemy->actions->deck_size = 1 + rand() % 2;
     break;
   case STRONG:
     enemy->enemy_stats = createStats(40 + rand() % 61, 0);
-    enemy->number_of_actions = 2 + rand() % 2;
+    enemy->actions->deck_size = 2 + rand() % 2;
     break;
   }
-  enemy->actions = (Action **)malloc(enemy->number_of_actions * sizeof(Action *));
-  if (enemy->actions == NULL)
-    allocFail("Actions");
+
+  enemy->actions->cards = (Card **)malloc(enemy->actions->deck_size * sizeof(Card *));
+  if (enemy->actions->cards == NULL)
+    allocFail("Enemy Actions");
 
   bool __has_created_attack_action = false;
   bool __has_created_cost1_action = false; // for strong enemy
   int action_cost;
-  for (int i = 0; i < enemy->number_of_actions; i++)
+  for (int i = 0; i < enemy->actions->deck_size; i++)
   {
     switch (enemy->enemy_type)
     {
@@ -49,11 +55,11 @@ Enemy *createEnemy(EnemyType enemy_type)
           __has_created_cost1_action = true;
       }
     }
-    if (i == enemy->number_of_actions - 1 && __has_created_attack_action == false)
-      enemy->actions[i] = createAction(ATTACK, action_cost);
+    if (i == enemy->actions->deck_size - 1 && __has_created_attack_action == false)
+      enemy->actions->cards[i] = createCard(ATTACK, action_cost);
     else
     {
-      enemy->actions[i] = createAction(1 + rand() % 2, action_cost); // ATTACK | DEFENSE
+      enemy->actions->cards[i] = createCard(1 + rand() % 2, action_cost); // ATTACK | DEFENSE
       __has_created_attack_action = true;
     }
   }
