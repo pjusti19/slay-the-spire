@@ -81,26 +81,54 @@ void RenderStack(Renderer *renderer, int x_left, int y_top, Deck *stack)
 void RenderHealthBar(Stats *stats, float x_begin, float x_end, float y_down_left,
                      ALLEGRO_FONT *font)
 {
+  y_down_left += 5;
+
   float mid_y = y_down_left - (HEALTH_BAR_HEIGHT * 0.78);
 
+  float total_width = x_end - x_begin;
+  float healthbar_percentage = (float)stats->healthbar / (float)stats->max_health;
+  float filled_width = total_width * healthbar_percentage;
+
+  if (stats->shieldbar > 0)
+  {
+    float shield_radius = 10;
+    float shield_x = x_end + 20;
+    float shield_y = y_down_left - (HEALTH_BAR_HEIGHT / 2);
+
+    al_draw_filled_circle(shield_x, shield_y, shield_radius, al_map_rgb(0, 150, 255));
+    al_draw_circle(shield_x, shield_y, shield_radius, al_map_rgb(255, 255, 255), 2);
+
+    char shield_text[16];
+    sprintf(shield_text, "%d", stats->shieldbar);
+
+    DrawScaledText(font, COLOR_WHITE, shield_x, shield_y - (al_get_font_line_height(font) * 0.10), 0.9, 0.9, ALLEGRO_ALIGN_CENTRE, shield_text);
+  }
   al_draw_filled_rounded_rectangle(
+      x_begin - HEALTH_BAR_BACKGROUND_EXTRA + 3,
+      y_down_left - HEALTH_BAR_BACKGROUND_EXTRA - 6,
+      x_begin - HEALTH_BAR_BACKGROUND_EXTRA - 2 + filled_width,
+      y_down_left - HEALTH_BAR_HEIGHT + HEALTH_BAR_BACKGROUND_EXTRA + 3,
+      HEALTH_BAR_RX, HEALTH_BAR_RY, COLOR_DARK_RED);
+
+  al_draw_rounded_rectangle(
       x_begin - HEALTH_BAR_BACKGROUND_EXTRA,
-      y_down_left - HEALTH_BAR_BACKGROUND_EXTRA,
+      y_down_left - HEALTH_BAR_BACKGROUND_EXTRA - 3,
       x_end + HEALTH_BAR_BACKGROUND_EXTRA,
       y_down_left - HEALTH_BAR_HEIGHT + HEALTH_BAR_BACKGROUND_EXTRA,
-      HEALTH_BAR_RX, HEALTH_BAR_RY, COLOR_WHITE);
+      HEALTH_BAR_RX, HEALTH_BAR_RY, al_map_rgb(163, 163, 163), 2);
+
   char text[100] = "";
   sprintf(text, "%d/%d", stats->healthbar, stats->max_health);
-  float x_scale = 1.5, y_scale = 1.5;
-  DrawScaledText(font, COLOR_BLACK, (x_begin + x_end) / 2.0 / x_scale,
+  float x_scale = 1.2, y_scale = 1.2;
+  DrawScaledText(font, COLOR_WHITE, (x_begin + x_end) / 2.0 / x_scale,
                  mid_y / y_scale, x_scale, y_scale, ALLEGRO_ALIGN_CENTRE, text);
 }
 
 void RenderPlayer(const Renderer *renderer, int begin_x, int mid_y, int width)
 {
-  float px = begin_x + width / 2.0;
-  float py = mid_y;
   float pr = width;
+  float px = begin_x + pr;
+  float py = mid_y;
 
   al_draw_filled_circle(px, py, pr, al_map_rgb(255, 255, 255));
 
@@ -116,11 +144,16 @@ void RenderPlayer(const Renderer *renderer, int begin_x, int mid_y, int width)
         al_map_rgb(255, 0, 0));
   }
 
-  float x_end = begin_x + width;
-  float health_bar_y = mid_y + width + 20;
+  float bar_width = (pr * 2) * 0.9f;
+
+  float x_begin = px - bar_width / 2.0f;
+  float x_end = px + bar_width / 2.0f;
+
+  float health_bar_y = py + pr + 25;
 
   RenderHealthBar(renderer->combat->player->player_stats,
-                  begin_x, x_end, health_bar_y, renderer->font);
+                  x_begin, x_end, health_bar_y,
+                  renderer->font);
 }
 
 void RenderCard(const Renderer *renderer, int x_left, int y_top, Card *card, bool __is_card_pointed)
@@ -256,9 +289,9 @@ void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
 
   al_destroy_bitmap(enemy_bitmap);
 
-  float x_end = x_left + ENEMY_WIDTH;
+  float x_end = x_left + ENEMY_WIDTH - 3;
   float health_bar_y = y_top + enemy_height + 20;
-  RenderHealthBar(enemy->enemy_stats, x_left, x_end, health_bar_y, renderer->font);
+  RenderHealthBar(enemy->enemy_stats, x_left + 3, x_end, health_bar_y, renderer->font);
 }
 
 void Render(Renderer *renderer)
@@ -280,7 +313,7 @@ void Render(Renderer *renderer)
   for (int i = 0; i < renderer->combat->enemy_group->enemy_amount; i++)
   {
     if (renderer->combat->enemy_group->enemies[i]->enemy_stats->healthbar > 0)
-      RenderEnemies(renderer, ENEMY_BEGIN_X + i * 130, ENEMY_BEGIN_Y + i * 50, i);
+      RenderEnemies(renderer, ENEMY_BEGIN_X + i * 150, ENEMY_BEGIN_Y + i * 50, i);
   }
 
   RenderPlayerHand(renderer);

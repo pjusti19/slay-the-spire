@@ -68,6 +68,7 @@ typedef enum
 #define COLOR_BLACK al_map_rgb(0,0,0)
 #define COLOR_WHITE al_map_rgb(255,255,255)
 #define COLOR_RED al_map_rgb(255, 0, 0)
+#define COLOR_DARK_RED al_map_rgb(192, 3, 3)
 #define COLOR_AQUA_BLUE al_map_rgb(105, 237, 255)
 
 #endif
