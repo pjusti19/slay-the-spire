@@ -81,7 +81,9 @@ void applyAction(Combat *combat, Card *used_card, Stats *caster, Stats *target)
             target->healthbar -= damage;
         if (target->healthbar <= 0)
         {
+            printf("entrou\n");
             target->healthbar = 0;
+            printf("tipo: %d\n", target->entity_type);
             if (target->entity_type == ENEMY)
             {
                 combat->enemies_left--;

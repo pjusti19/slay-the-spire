@@ -101,8 +101,11 @@ void RenderHealthBar(Stats *stats, float x_begin, float x_end, float y_down_left
     char shield_text[16];
     sprintf(shield_text, "%d", stats->shieldbar);
 
-    DrawScaledText(font, COLOR_WHITE, shield_x, shield_y - (al_get_font_line_height(font) * 0.10), 0.9, 0.9, ALLEGRO_ALIGN_CENTRE, shield_text);
+    float scale = 0.9;
+
+    DrawScaledText(font, COLOR_WHITE, shield_x / scale + 1, shield_y / scale - 3, scale, scale, ALLEGRO_ALIGN_CENTRE, shield_text);
   }
+  
   al_draw_filled_rounded_rectangle(
       x_begin - HEALTH_BAR_BACKGROUND_EXTRA + 3,
       y_down_left - HEALTH_BAR_BACKGROUND_EXTRA - 6,

@@ -22,7 +22,6 @@ Enemy *createEnemy(EnemyType enemy_type)
   {
   case WEAK:
     enemy->enemy_stats = createStats(10 + rand() % 21, 0);
-    enemy->enemy_stats->entity_type = ENEMY;
     enemy->actions->deck_size = 1 + rand() % 2;
     break;
   case STRONG:
@@ -31,6 +30,7 @@ Enemy *createEnemy(EnemyType enemy_type)
     break;
   }
 
+  enemy->enemy_stats->entity_type = ENEMY;
   enemy->actions->cards = (Card **)malloc(enemy->actions->deck_size * sizeof(Card *));
   if (enemy->actions->cards == NULL)
     allocFail("Enemy Actions");
