@@ -14,7 +14,7 @@ typedef struct
   int energy;
 } Player;
 
-Player *createPlayer(int init_healt, int init_shield);
+Player *createPlayer();
 
 void freePlayer(Player *player);
 

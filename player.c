@@ -4,16 +4,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-Player *createPlayer(int init_health, int init_shield)
+Player *createPlayer()
 {
   Player *player = (Player *)malloc(sizeof(Player));
   if (player == NULL)
     allocFail("Player");
 
   player->energy = 0;
-  player->player_stats = createStats(init_health, init_shield);
+  player->player_stats = createStats(PLAYER_MAX_HEALTH, PLAYER_INIT_SHIELD, DEAFULT_INIT_LIFESTEAL);
   player->player_stats->entity_type = PLAYER;
-  player->deck = createDeck(MAX_DECK_STACK, true);
+  // player->deck = createDeck(MAX_DECK_STACK, true);
+  player->deck = createDeck(EXTRA_DECK_STACK, true);
   player->hand = createDeck(0, false);
   player->discard_stack = createDeck(0, false);
   player->discard_stack->cards = (Card **)malloc(20 * sizeof(Card *));

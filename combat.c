@@ -25,6 +25,11 @@ void beginPlayerTurn(Combat *combat)
 {
     combat->player->energy = 3;
     combat->player->player_stats->shieldbar = 0;
+    if (combat->player->player_stats->poison > 0)
+    {
+        combat->player->player_stats->healthbar -= combat->player->player_stats->poison;
+        combat->player->player_stats->poison--;
+    }
     combat->pointed_card = 0;
     combat->pointed_enemy = getFirstAliveEnemy(combat->enemy_group);
     combat->__is_card_selected = false;
@@ -38,6 +43,8 @@ void enemyTurn(Combat *combat)
     for (int i = 0; i < combat->enemy_group->enemy_amount; i++)
     {
         combat->enemy_group->enemies[i]->enemy_stats->shieldbar = 0;
+        combat->enemy_group->enemies[i]->enemy_stats->healthbar -= combat->enemy_group->enemies[i]->enemy_stats->poison;
+        combat->enemy_group->enemies[i]->enemy_stats->poison--;
         int *actual_action = &combat->enemy_group->enemies[i]->actual_action;
         if (combat->enemy_group->enemies[i]->enemy_stats->healthbar > 0)
         {
@@ -59,14 +66,14 @@ void applyAction(Combat *combat, Card *used_card, Stats *caster, Stats *target)
     switch (used_card->card_type)
     {
     case DEFENSE:
-        caster->shieldbar += used_card->effect_rate;
+        caster->shieldbar += (used_card->effect_rate + caster->dexterity);
         printf("\ndefendeu\n");
         if (caster->entity_type == PLAYER)
-            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack);
+            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, false);
         break;
     case ATTACK:
         printf("\natacou\n");
-        damage = used_card->effect_rate;
+        damage = floor((used_card->effect_rate + caster->strenght) * (target->vulnerability * 100.0) / caster->weakness);
         if (target->shieldbar > 0)
         {
             target->shieldbar -= damage;
@@ -79,6 +86,8 @@ void applyAction(Combat *combat, Card *used_card, Stats *caster, Stats *target)
         }
         if (damage > 0)
             target->healthbar -= damage;
+        if (caster->lifesteal > 0)
+            caster->healthbar += floor(damage * (caster->lifesteal / 100.0));
         if (target->healthbar <= 0)
         {
             printf("entrou\n");
@@ -91,12 +100,36 @@ void applyAction(Combat *combat, Card *used_card, Stats *caster, Stats *target)
             }
         }
         if (caster->entity_type == PLAYER)
-            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack);
+            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, false);
         break;
     case SPECIAL:
         while (combat->player->hand->deck_size > 0)
             transferCards(combat->player->hand, combat->player->discard_stack);
         buyHandCards(combat->player->stack, combat->player->hand, combat->player->discard_stack, DEFAULT_HAND_STACK);
+        break;
+    case LIFESTEAL:
+        caster->lifesteal = used_card->effect_rate;
+        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        break;
+    case STRENGTH:
+        caster->strenght += used_card->effect_rate;
+        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        break;
+    case DEXTERITY:
+        caster->dexterity += used_card->effect_rate;
+        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        break;
+    case VULNERABILITY:
+        caster->vulnerability += used_card->effect_rate;
+        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        break;
+    case WEAKNESS:
+        caster->weakness += used_card->effect_rate;
+        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        break;
+    case POISON:
+        caster->poison += used_card->effect_rate;
+        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
         break;
     }
 }

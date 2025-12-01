@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "utils.h"
 
-Stats *createStats(int initial_health, int initial_shield)
+Stats *createStats(int initial_health, int initial_shield, int initial_lifesteal)
 {
     Stats *stats = (Stats *)malloc(sizeof(Stats));
     if (stats == NULL)
@@ -12,6 +12,12 @@ Stats *createStats(int initial_health, int initial_shield)
     stats->max_health = initial_health;
     stats->healthbar = initial_health;
     stats->shieldbar = initial_shield;
+    stats->lifesteal = initial_lifesteal;
+    stats->strenght = 0;
+    stats->dexterity = 0;
+    stats->vulnerability = 1;
+    stats->weakness = 1;
+    stats->poison = 0;
 
     return stats;
 }

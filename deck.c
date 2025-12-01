@@ -1,9 +1,6 @@
 #include "deck.h"
 
 #include "utils.h"
-#include "card.h"
-#include <stdlib.h>
-#include <stdio.h>
 
 Deck *createDeck(int deck_size, bool __create_cards)
 {
@@ -30,8 +27,20 @@ Deck *createDeck(int deck_size, bool __create_cards)
                 deck->cards[i] = createCard(DEFENSE, ceil(pow(1.25, i - 10) - 1));
             else if (i < 18)
                 deck->cards[i] = createCard(DEFENSE, (rand() % 3));
-            else
-                deck->cards[i] = createCard(SPECIAL, 0);
+            else if (i < 20)
+                deck->cards[i] = createCard(SPECIAL, SPECIAL_DEFAULT_COST);
+            else if (i < 21)
+                deck->cards[i] = createCard(LIFESTEAL, LIFESTEAL_DEFAULT_COST);
+            else if (i < 23)
+                deck->cards[i] = createCard(STRENGTH, 1 + rand() % 3);
+            else if (i < 25)
+                deck->cards[i] = createCard(DEXTERITY, 1 + rand() % 3);
+            else if (i < 27)
+                deck->cards[i] = createCard(VULNERABILITY, 1 + rand() % 3);
+            else if (i < 29)
+                deck->cards[i] = createCard(WEAKNESS, 1 + rand() % 3);
+            else if (i < 31)
+                deck->cards[i] = createCard(POISON, 1 + rand() % 3);
         }
         shuffleDeck(deck);
     }
@@ -45,7 +54,7 @@ void transferCards(Deck *origin, Deck *destiny)
 {
     int last = origin->deck_size - 1;
     for (int i = last; i >= 0; i--)
-        discardCard(origin, &last, destiny);
+        discardCard(origin, &last, destiny, false);
 }
 
 void buyHandCards(Deck *stack, Deck *hand, Deck *discard_stack, int bought_cards)
@@ -66,8 +75,12 @@ void buyHandCards(Deck *stack, Deck *hand, Deck *discard_stack, int bought_cards
         transferCards(discard_stack, stack);
     }
     else
+    {
+        printf("antigo %d comprado %d\n", old_hand_size, bought_cards);
         new_hand_size = old_hand_size + bought_cards;
+    }
 
+    printf("tamanho atual da mão: %d\n", new_hand_size);
     if (hand->cards == NULL)
     {
         hand->cards = (Card **)malloc(new_hand_size * sizeof(Card *));
@@ -125,18 +138,21 @@ Deck *copyDeck(const Deck *src)
     return copy;
 }
 
-void discardCard(Deck *hand, int *pointed_card, Deck *discard_stack)
+void discardCard(Deck *hand, int *pointed_card, Deck *discard_stack, bool __remove_from_combat)
 {
-    discard_stack->cards[discard_stack->deck_size] = hand->cards[*pointed_card];
-    discard_stack->deck_size++;
+    if (__remove_from_combat == false) // Permanently discards exhaustive cards from the actual combat
+    {
+        discard_stack->cards[discard_stack->deck_size] = hand->cards[*pointed_card];
+        discard_stack->deck_size++;
+    }
 
     for (int i = *pointed_card; i < hand->deck_size - 1; i++)
     {
         Card *aux = hand->cards[i];
-        hand->cards[i] = hand->cards[i+1];
-        hand->cards[i+1] = aux;
+        hand->cards[i] = hand->cards[i + 1];
+        hand->cards[i + 1] = aux;
     }
-    hand->cards[hand->deck_size-1] = NULL;
+    hand->cards[hand->deck_size - 1] = NULL;
     hand->deck_size--;
 
     if (*pointed_card >= hand->deck_size)

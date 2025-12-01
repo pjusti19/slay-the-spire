@@ -8,6 +8,7 @@
 #include "renderer.h"
 #include "constants.h"
 #include "utils.h"
+#include "card.h"
 
 int main()
 {
@@ -36,7 +37,7 @@ int main()
   FillRenderer(&renderer);
   al_register_event_source(queue, al_get_display_event_source(renderer.display));
 
-  Player *player = createPlayer(PLAYER_MAX_HEALTH, PLAYER_INIT_SHIELD);
+  Player *player = createPlayer();
 
   renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE);
 
@@ -111,24 +112,19 @@ int main()
       {
         if (keyboard_keys[ALLEGRO_KEY_LEFT] & GAME_KEY_SEEN)
           if (renderer.combat->pointed_enemy - 1 >= 0)
-          {
             renderer.combat->pointed_enemy--;
-            printf("inimigo atual: %d\n", renderer.combat->pointed_enemy);
-          }
 
         if (keyboard_keys[ALLEGRO_KEY_RIGHT] & GAME_KEY_SEEN)
           if (renderer.combat->pointed_enemy + 1 < renderer.combat->enemy_group->enemy_amount)
-          {
             renderer.combat->pointed_enemy++;
-            printf("inimigo atual: %d\n", renderer.combat->pointed_enemy);
-          }
       }
       // ENTER LOGIC
       if (keyboard_keys[ALLEGRO_KEY_ENTER] & GAME_KEY_SEEN)
       {
         if (renderer.combat->__has_enter_been_pressed == false && renderer.combat->__has_passive_card_been_used == false)
         {
-          if (renderer.combat->player->hand->cards[renderer.combat->pointed_card]->card_type == ATTACK)
+          ActionType action_type = renderer.combat->player->hand->cards[renderer.combat->pointed_card]->card_type;
+          if (action_type == ATTACK || action_type == VULNERABILITY || action_type == WEAKNESS || action_type == POISON)
           {
             if (renderer.combat->enemies_left > 0)
             {
@@ -137,9 +133,7 @@ int main()
             }
           }
           else
-          {
             renderer.combat->__has_passive_card_been_used = true;
-          }
         }
         else if (((renderer.combat->__has_enter_been_pressed == true) || (renderer.combat->__has_passive_card_been_used == true)) && renderer.combat->player->energy >= renderer.combat->player->hand->cards[renderer.combat->pointed_card]->cost)
         {

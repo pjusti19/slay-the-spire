@@ -11,13 +11,13 @@
 #define DISPLAY_WIDTH DISPLAY_SCALE *DISPLAY_BUFFER_WIDTH
 #define DISPLAY_HEIGHT DISPLAY_SCALE *DISPLAY_BUFFER_HEIGHT
 
+#define DEAFULT_INIT_LIFESTEAL 0
+
 // Player
 #define PLAYER_BEGIN_X 200
 #define PLAYER_BEGIN_Y 100
 #define PLAYER_RADIUS 80
 
-#define MAX_DECK_STACK 20
-#define DEFAULT_HAND_STACK 5
 #define PLAYER_MAX_HEALTH 100
 #define PLAYER_INIT_SHIELD 0
 
@@ -28,6 +28,16 @@
 #define DECK_WIDTH 80
 #define DECK_HEIGHT 80
 
+#define MAX_DECK_STACK 20
+#define EXTRA_DECK_STACK 31
+
+// Cards
+#define CARD_WIDTH 100
+#define CARD_HEIGHT 130
+
+#define SPECIAL_DEFAULT_COST 0
+#define LIFESTEAL_DEFAULT_COST 3
+#define BASE_LIFESTEAL_EFFECT 20
 
 //Health Bar
 #define HEALTH_BAR_HEIGHT 20
@@ -40,15 +50,7 @@
 #define HAND_BEGIN_X 180
 #define HAND_BEGIN_Y 380
 
-#define CARD_WIDTH 100
-#define CARD_HEIGHT 130
-
-// You might want to use this.
-typedef enum
-{
-  MOVE_LEFT = 0,
-  MOVE_RIGHT = 1,
-} CursorMovementDirection;
+#define DEFAULT_HAND_STACK 5
 
 // Energy
 #define ENERGY_GAUGE_BEGIN_X 50
@@ -70,5 +72,6 @@ typedef enum
 #define COLOR_RED al_map_rgb(255, 0, 0)
 #define COLOR_DARK_RED al_map_rgb(192, 3, 3)
 #define COLOR_AQUA_BLUE al_map_rgb(105, 237, 255)
+#define COLOR_GREY_GREEN al_map_rgb(102, 136, 92)
 
 #endif

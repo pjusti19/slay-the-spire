@@ -21,11 +21,11 @@ Enemy *createEnemy(EnemyType enemy_type)
   switch (enemy->enemy_type)
   {
   case WEAK:
-    enemy->enemy_stats = createStats(10 + rand() % 21, 0);
+    enemy->enemy_stats = createStats(10 + rand() % 21, 0, DEAFULT_INIT_LIFESTEAL);
     enemy->actions->deck_size = 1 + rand() % 2;
     break;
   case STRONG:
-    enemy->enemy_stats = createStats(40 + rand() % 61, 0);
+    enemy->enemy_stats = createStats(40 + rand() % 61, 0, DEAFULT_INIT_LIFESTEAL);
     enemy->actions->deck_size = 2 + rand() % 2;
     break;
   }
@@ -59,7 +59,7 @@ Enemy *createEnemy(EnemyType enemy_type)
       enemy->actions->cards[i] = createCard(ATTACK, action_cost);
     else
     {
-      enemy->actions->cards[i] = createCard(1 + rand() % 2, action_cost); // ATTACK | DEFENSE
+      enemy->actions->cards[i] = createCard(1 + rand() % 8, action_cost); // ATTACK | DEFENSE | EXTRAS
       __has_created_attack_action = true;
     }
   }

@@ -7,7 +7,13 @@ typedef enum
 {
     DEFENSE = 1,
     ATTACK = 2,
-    SPECIAL = 3,
+    LIFESTEAL = 3,
+    STRENGTH = 4,
+    DEXTERITY = 5,
+    VULNERABILITY = 6,
+    WEAKNESS = 7,
+    POISON = 8,
+    SPECIAL = 9,
 } ActionType;
 
 typedef struct

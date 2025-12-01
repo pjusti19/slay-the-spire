@@ -26,6 +26,40 @@ void DrawScaledText(ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float y,
   al_use_transform(&transform); // Use the transform for subsequent drawing
 }
 
+void DrawMultilineText(ALLEGRO_FONT *font, ALLEGRO_COLOR color,
+                       float x, float y, float line_height,
+                       int align, const char *text)
+{
+  char line[256];
+  int i = 0, j = 0;
+
+  while (1)
+  {
+    if (text[i] == '\n' || text[i] == '\0')
+    {
+      line[j] = '\0';
+
+      if (align == ALLEGRO_ALIGN_CENTER)
+        al_draw_text(font, color, x, y, ALLEGRO_ALIGN_CENTER, line);
+      else if (align == ALLEGRO_ALIGN_RIGHT)
+        al_draw_text(font, color, x, y, ALLEGRO_ALIGN_RIGHT, line);
+      else
+        al_draw_text(font, color, x, y, 0, line);
+
+      y += line_height;
+      j = 0;
+
+      if (text[i] == '\0')
+        break;
+
+      i++;
+      continue;
+    }
+
+    line[j++] = text[i++];
+  }
+}
+
 void DrawCenteredScaledText(ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x,
                             float y, float xscale, float yscale, char *text)
 {
@@ -105,13 +139,17 @@ void RenderHealthBar(Stats *stats, float x_begin, float x_end, float y_down_left
 
     DrawScaledText(font, COLOR_WHITE, shield_x / scale + 1, shield_y / scale - 3, scale, scale, ALLEGRO_ALIGN_CENTRE, shield_text);
   }
-  
+
+  ALLEGRO_COLOR healthbar_color = COLOR_DARK_RED;
+  if (stats->poison > 0)
+    healthbar_color = COLOR_GREY_GREEN;
+
   al_draw_filled_rounded_rectangle(
       x_begin - HEALTH_BAR_BACKGROUND_EXTRA + 3,
       y_down_left - HEALTH_BAR_BACKGROUND_EXTRA - 6,
       x_begin - HEALTH_BAR_BACKGROUND_EXTRA - 2 + filled_width,
       y_down_left - HEALTH_BAR_HEIGHT + HEALTH_BAR_BACKGROUND_EXTRA + 3,
-      HEALTH_BAR_RX, HEALTH_BAR_RY, COLOR_DARK_RED);
+      HEALTH_BAR_RX, HEALTH_BAR_RY, healthbar_color);
 
   al_draw_rounded_rectangle(
       x_begin - HEALTH_BAR_BACKGROUND_EXTRA,
@@ -165,12 +203,11 @@ void RenderCard(const Renderer *renderer, int x_left, int y_top, Card *card, boo
   al_set_target_bitmap(card_bitmap);
 
   al_draw_filled_rounded_rectangle(10, 10, CARD_WIDTH - 10, CARD_HEIGHT - 10, 5, 5, al_map_rgb(255, 255, 255));
-
   al_draw_rounded_rectangle(10, 10, CARD_WIDTH - 10, CARD_HEIGHT - 10, 5, 5, al_map_rgb(255, 0, 0), 2);
 
-  char card_type[20] = "";
-  char effect_rate[20] = "";
-  char cost[20] = "";
+  char card_type[20];
+  char effect_rate[64];
+  char cost[20];
 
   sprintf(cost, "Custo: %d", card->cost);
 
@@ -180,35 +217,82 @@ void RenderCard(const Renderer *renderer, int x_left, int y_top, Card *card, boo
     sprintf(card_type, "Defesa");
     sprintf(effect_rate, "Escudo: %d", card->effect_rate);
     break;
+
   case ATTACK:
     sprintf(card_type, "Ataque");
     sprintf(effect_rate, "Dano: %d", card->effect_rate);
     break;
+
   case SPECIAL:
     sprintf(card_type, "Especial");
+    sprintf(effect_rate, "");
+    break;
+
+  case LIFESTEAL:
+    sprintf(card_type, "Vampirismo");
+    sprintf(effect_rate, "Cura: %d%%\n"
+                         "do ataque",
+            card->effect_rate);
+    break;
+  case STRENGTH:
+    sprintf(card_type, "Força");
+    sprintf(effect_rate, "+ %d de\n"
+                         "dano extra",
+            card->effect_rate);
+    break;
+  case DEXTERITY:
+    sprintf(card_type, "Destreza");
+    sprintf(effect_rate, "+ %d de\n"
+                         "escudo extra",
+            card->effect_rate);
+    break;
+  case VULNERABILITY:
+    sprintf(card_type, "Vulnerabilidade");
+    sprintf(effect_rate, "%dx + dano\n"
+                         "no inimigo",
+            card->effect_rate);
+    break;
+  case WEAKNESS:
+    sprintf(card_type, "Fraqueza");
+    sprintf(effect_rate, "%dx - dano\n"
+                         "do inimigo",
+            card->effect_rate);
+    break;
+  case POISON:
+    sprintf(card_type, "Veneno");
+    sprintf(effect_rate, "Base: %d",
+            card->effect_rate);
     break;
   }
 
   float xscale = 1, yscale = 1;
-  float font_height = al_get_font_line_height(renderer->font) * yscale;
+  float font_height = al_get_font_line_height(renderer->font);
 
-  DrawScaledText(renderer->font, COLOR_BLACK, (CARD_WIDTH * 0.5) / xscale,
-                 (CARD_HEIGHT * 0.3) / yscale, xscale, yscale,
-                 ALLEGRO_ALIGN_CENTER, card_type);
-  DrawScaledText(renderer->font, COLOR_BLACK, (CARD_WIDTH * 0.5) / xscale,
-                 (CARD_HEIGHT * 0.3) / yscale + font_height, xscale, yscale,
-                 ALLEGRO_ALIGN_CENTER, effect_rate);
-  DrawScaledText(renderer->font, COLOR_BLACK, (CARD_WIDTH * 0.5) / xscale,
-                 (CARD_HEIGHT * 0.3) / yscale + font_height * 2, xscale, yscale,
-                 ALLEGRO_ALIGN_CENTER, cost);
+  DrawScaledText(renderer->font, COLOR_BLACK, CARD_WIDTH * 0.5,
+                 CARD_HEIGHT * 0.3, 1, 1, ALLEGRO_ALIGN_CENTER, card_type);
 
-  if (__is_card_pointed == true)
-  {
+  if (card->card_type != ATTACK && card->card_type != DEFENSE && card->card_type != SPECIAL)
+    DrawMultilineText(renderer->font, COLOR_BLACK,
+                      CARD_WIDTH * 0.5,
+                      CARD_HEIGHT * 0.4 + font_height,
+                      font_height,
+                      ALLEGRO_ALIGN_CENTER,
+                      effect_rate);
+  else
+    DrawScaledText(renderer->font, COLOR_BLACK, CARD_WIDTH * 0.5,
+                   CARD_HEIGHT * 0.4 + font_height,
+                   1, 1, ALLEGRO_ALIGN_CENTER, effect_rate);
+
+  DrawScaledText(renderer->font, COLOR_BLACK, CARD_WIDTH * 0.5,
+                 CARD_HEIGHT * 0.5 + font_height * 3,
+                 1, 1, ALLEGRO_ALIGN_CENTER, cost);
+
+  if (__is_card_pointed)
     y_top -= 70;
-  }
+
   al_set_target_bitmap(renderer->display_buffer);
-  al_draw_scaled_bitmap(card_bitmap, 0, 0, CARD_WIDTH, CARD_HEIGHT, x_left,
-                        y_top, CARD_WIDTH, CARD_HEIGHT, 0);
+  al_draw_scaled_bitmap(card_bitmap, 0, 0, CARD_WIDTH, CARD_HEIGHT,
+                        x_left, y_top, CARD_WIDTH, CARD_HEIGHT, 0);
 
   al_destroy_bitmap(card_bitmap);
 }

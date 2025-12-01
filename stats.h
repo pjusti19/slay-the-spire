@@ -10,9 +10,15 @@ typedef struct{
     int healthbar;
     int shieldbar;
     int max_health;
+    int lifesteal;
+    int strenght;
+    int dexterity;
+    int weakness;
+    int vulnerability;
+    int poison;
     EntityType entity_type;
 } Stats;
 
-Stats *createStats(int initial_health, int initial_shield);
+Stats *createStats(int initial_health, int initial_shield, int initial_lifesteal);
 
 #endif
