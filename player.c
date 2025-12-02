@@ -17,7 +17,7 @@ Player *createPlayer()
   player->deck = createDeck(EXTRA_DECK_STACK, true);
   player->hand = createDeck(0, false);
   player->discard_stack = createDeck(0, false);
-  player->discard_stack->cards = (Card **)malloc(20 * sizeof(Card *));
+  player->discard_stack->cards = (Card **)malloc(EXTRA_DECK_STACK * sizeof(Card *));
   player->discard_stack->deck_size = 0;
   return player;
 }

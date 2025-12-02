@@ -46,3 +46,22 @@ for (int i = 0; i < 2; i++)
     }
 
     verificando a criação de ações dos inimigos (deu certo)
+
+        printf("\n==========\n INIMIGO %d\n =========\n", i);
+        printf("forca: %d\n", combat->enemy_group->enemies[i]->enemy_stats->strength);
+        printf("destreza: %d\n", combat->enemy_group->enemies[i]->enemy_stats->dexterity);
+        printf("vulnerabilidade: %d\n", combat->enemy_group->enemies[i]->enemy_stats->vulnerability);
+        printf("fraqueza: %d\n", combat->enemy_group->enemies[i]->enemy_stats->weakness);
+        printf("poison: %d\n", combat->enemy_group->enemies[i]->enemy_stats->poison);
+
+        verificando os status do inimigo (corrigido)
+
+
+    printf("\n==========\n PLAYER\n =========\n");
+    printf("forca: %d\n", combat->player->player_stats->strength);
+    printf("destreza: %d\n", combat->player->player_stats->dexterity);
+    printf("vulnerabilidade: %d\n", combat->player->player_stats->vulnerability);
+    printf("fraqueza: %d\n", combat->player->player_stats->weakness);
+    printf("poison: %d\n", combat->player->player_stats->poison);
+
+verificando o status do player (corrigido)

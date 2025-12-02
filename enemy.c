@@ -55,12 +55,17 @@ Enemy *createEnemy(EnemyType enemy_type)
           __has_created_cost1_action = true;
       }
     }
-    if (i == enemy->actions->deck_size - 1 && __has_created_attack_action == false)
+    if ((i == enemy->actions->deck_size - 1) && (__has_created_attack_action == false))
+    {
       enemy->actions->cards[i] = createCard(ATTACK, action_cost);
+      __has_created_attack_action = true;
+    }
     else
     {
-      enemy->actions->cards[i] = createCard(1 + rand() % 8, action_cost); // ATTACK | DEFENSE | EXTRAS
-      __has_created_attack_action = true;
+      int card_type = 1 + rand() % 5;
+      if (card_type != DEFENSE && card_type != ATTACK) // Why? -> Some extra cards get no effect if cost == 0
+        action_cost = DEFAULT_ENEMY_BUFF_COST;
+      enemy->actions->cards[i] = createCard(card_type, action_cost); // ATTACK | DEFENSE | EXTRAS
     }
   }
 

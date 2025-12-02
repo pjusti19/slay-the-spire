@@ -143,6 +143,8 @@ void RenderHealthBar(Stats *stats, float x_begin, float x_end, float y_down_left
   ALLEGRO_COLOR healthbar_color = COLOR_DARK_RED;
   if (stats->poison > 0)
     healthbar_color = COLOR_GREY_GREEN;
+  else if(stats->__is_kaioken_active == true)
+    healthbar_color = COLOR_FIRE_ORANGE;
 
   al_draw_filled_rounded_rectangle(
       x_begin - HEALTH_BAR_BACKGROUND_EXTRA + 3,
@@ -225,7 +227,7 @@ void RenderCard(const Renderer *renderer, int x_left, int y_top, Card *card, boo
 
   case SPECIAL:
     sprintf(card_type, "Especial");
-    sprintf(effect_rate, "");
+    sprintf(effect_rate, "Nova mão");
     break;
 
   case LIFESTEAL:
@@ -236,32 +238,39 @@ void RenderCard(const Renderer *renderer, int x_left, int y_top, Card *card, boo
     break;
   case STRENGTH:
     sprintf(card_type, "Força");
-    sprintf(effect_rate, "+ %d de\n"
+    sprintf(effect_rate, "+ %%%d de\n"
                          "dano extra",
             card->effect_rate);
     break;
   case DEXTERITY:
     sprintf(card_type, "Destreza");
-    sprintf(effect_rate, "+ %d de\n"
-                         "escudo extra",
+    sprintf(effect_rate, "+ %%%d de\n"
+                         "esc. extra",
             card->effect_rate);
     break;
   case VULNERABILITY:
-    sprintf(card_type, "Vulnerabilidade");
-    sprintf(effect_rate, "%dx + dano\n"
-                         "no inimigo",
+    sprintf(card_type, "Vulneravel");
+    sprintf(effect_rate, "+ %d%% de\n"
+                         "dano",
             card->effect_rate);
     break;
   case WEAKNESS:
     sprintf(card_type, "Fraqueza");
-    sprintf(effect_rate, "%dx - dano\n"
-                         "do inimigo",
+    sprintf(effect_rate, "Causa -%d%%\n"
+                         "de dano",
             card->effect_rate);
     break;
   case POISON:
     sprintf(card_type, "Veneno");
     sprintf(effect_rate, "Base: %d",
             card->effect_rate);
+    break;
+  case KAIOKEN:
+    sprintf(card_type, "Kaioken");
+    sprintf(effect_rate, "+%%%d de dano\n" 
+                         "-%%%d de vida\n"
+                         "por rodada",
+            card->effect_rate, card->effect_rate / 10);
     break;
   }
 
@@ -358,6 +367,18 @@ void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
   case DEFENSE:
     sprintf(action_type, "DEF");
     color = COLOR_AQUA_BLUE;
+    break;
+  case VULNERABILITY:
+    sprintf(action_type, "VUL");
+    color = COLOR_GREY_PURPLE;
+    break;
+  case WEAKNESS:
+    sprintf(action_type, "WKN");
+    color = COLOR_GREY;
+    break;
+  case POISON:
+    sprintf(action_type, "PSN");
+    color = COLOR_GREY_GREEN;
     break;
   }
 

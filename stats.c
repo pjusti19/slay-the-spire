@@ -13,11 +13,12 @@ Stats *createStats(int initial_health, int initial_shield, int initial_lifesteal
     stats->healthbar = initial_health;
     stats->shieldbar = initial_shield;
     stats->lifesteal = initial_lifesteal;
-    stats->strenght = 0;
+    stats->strength = 0;
     stats->dexterity = 0;
     stats->vulnerability = 1;
     stats->weakness = 1;
     stats->poison = 0;
+    stats->__is_kaioken_active = false;
 
     return stats;
 }

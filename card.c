@@ -8,23 +8,27 @@ Card *createCard(ActionType card_type, int cost)
     if (card == NULL)
         allocFail("Card");
 
+    card->__is_skipable = false;
     card->card_type = card_type;
     card->cost = cost;
+
     if (card_type == SPECIAL)
         card->effect_rate = 0;
-    else if(card_type == LIFESTEAL)
+    else if (card_type == LIFESTEAL)
         card->effect_rate = BASE_LIFESTEAL_EFFECT + rand() % 11;
-    else if(card_type == STRENGTH || card_type == DEXTERITY)    
-        card->effect_rate = 3 * cost;
-    else if(card_type == VULNERABILITY)    
+    else if (card_type == STRENGTH || card_type == DEXTERITY)
+        card->effect_rate = 5 * cost;
+    else if (card_type == VULNERABILITY)
         card->effect_rate = cost * 20;
-    else if(card_type == WEAKNESS)
+    else if (card_type == WEAKNESS)
         card->effect_rate = cost * 8;
-    else if(card_type == POISON)
+    else if (card_type == POISON)
         card->effect_rate = cost * 3;
+    else if (card_type == KAIOKEN)
+        card->effect_rate = BASE_KAIOKEN_BUFF;
     else // DEFENSE & ATTACK
     {
-        
+
         switch (card->cost)
         {
         case 0:

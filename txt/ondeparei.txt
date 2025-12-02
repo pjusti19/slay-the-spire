@@ -1,6 +1,5 @@
 ONDE EU PAREI:
 
-1 - Cartas de buff e debuff. 
-2 - Sepukku (múltiplos efeitos)
-3 - Boss
-4 - Deixar o jogo bonitinho
+1 - Carta de custo variável 
+2 - Boss
+3 - Deixar o jogo bonitinho

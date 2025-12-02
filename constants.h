@@ -29,7 +29,7 @@
 #define DECK_HEIGHT 80
 
 #define MAX_DECK_STACK 20
-#define EXTRA_DECK_STACK 31
+#define EXTRA_DECK_STACK 32
 
 // Cards
 #define CARD_WIDTH 100
@@ -38,7 +38,9 @@
 #define SPECIAL_DEFAULT_COST 0
 #define LIFESTEAL_DEFAULT_COST 3
 #define BASE_LIFESTEAL_EFFECT 20
-
+#define BASE_KAIOKEN_BUFF 100
+#define DEFAULT_KAIOKEN_COST 3
+#define DEFAULT_ENEMY_BUFF_COST 2
 //Health Bar
 #define HEALTH_BAR_HEIGHT 20
 #define HEALTH_BAR_BACKGROUND_EXTRA 1
@@ -73,5 +75,10 @@
 #define COLOR_DARK_RED al_map_rgb(192, 3, 3)
 #define COLOR_AQUA_BLUE al_map_rgb(105, 237, 255)
 #define COLOR_GREY_GREEN al_map_rgb(102, 136, 92)
+#define COLOR_YELLOW al_map_rgb(202, 165, 0)
+#define COLOR_LIGHT_GREEN al_map_rgb(0, 202, 44)
+#define COLOR_GREY_PURPLE al_map_rgb(113, 75, 138)
+#define COLOR_GREY al_map_rgb(160, 160, 160)
+#define COLOR_FIRE_ORANGE al_map_rgb(255, 101, 11)
 
 #endif

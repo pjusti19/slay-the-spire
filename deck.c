@@ -32,15 +32,17 @@ Deck *createDeck(int deck_size, bool __create_cards)
             else if (i < 21)
                 deck->cards[i] = createCard(LIFESTEAL, LIFESTEAL_DEFAULT_COST);
             else if (i < 23)
-                deck->cards[i] = createCard(STRENGTH, 1 + rand() % 3);
+                deck->cards[i] = createCard(STRENGTH, 2 + rand() % 2);
             else if (i < 25)
-                deck->cards[i] = createCard(DEXTERITY, 1 + rand() % 3);
+                deck->cards[i] = createCard(DEXTERITY, 2 + rand() % 2);
             else if (i < 27)
-                deck->cards[i] = createCard(VULNERABILITY, 1 + rand() % 3);
+                deck->cards[i] = createCard(VULNERABILITY, 2 + rand() % 2);
             else if (i < 29)
-                deck->cards[i] = createCard(WEAKNESS, 1 + rand() % 3);
+                deck->cards[i] = createCard(WEAKNESS, 2 + rand() % 2);
             else if (i < 31)
-                deck->cards[i] = createCard(POISON, 1 + rand() % 3);
+                deck->cards[i] = createCard(POISON, 2 + rand() % 2);
+            else
+                deck->cards[i] = createCard(KAIOKEN, DEFAULT_KAIOKEN_COST);
         }
         shuffleDeck(deck);
     }
@@ -76,11 +78,9 @@ void buyHandCards(Deck *stack, Deck *hand, Deck *discard_stack, int bought_cards
     }
     else
     {
-        printf("antigo %d comprado %d\n", old_hand_size, bought_cards);
         new_hand_size = old_hand_size + bought_cards;
     }
 
-    printf("tamanho atual da mão: %d\n", new_hand_size);
     if (hand->cards == NULL)
     {
         hand->cards = (Card **)malloc(new_hand_size * sizeof(Card *));

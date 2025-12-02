@@ -4,6 +4,16 @@
 #include "constants.h"
 #include <stdio.h>
 
+void resetEffects(Stats *stats)
+{
+    stats->strength = 0;
+    stats->dexterity = 0;
+    stats->vulnerability = 1;
+    stats->weakness = 1;
+    stats->poison = 0;
+    stats->__is_kaioken_active = false;
+}
+
 Combat *createCombat(Player *player, int enemy_amount)
 {
     Combat *combat = (Combat *)malloc(sizeof(Combat));
@@ -16,8 +26,8 @@ Combat *createCombat(Player *player, int enemy_amount)
     player->stack = copyDeck(player->deck);
     combat->player->hand->deck_size = 0;
     combat->player->discard_stack->deck_size = 0;
+    resetEffects(combat->player->player_stats);
     beginPlayerTurn(combat);
-
     return combat;
 }
 
@@ -30,6 +40,8 @@ void beginPlayerTurn(Combat *combat)
         combat->player->player_stats->healthbar -= combat->player->player_stats->poison;
         combat->player->player_stats->poison--;
     }
+    if (combat->player->player_stats->__is_kaioken_active == true)
+        combat->player->player_stats->healthbar -= combat->player->player_stats->max_health * (BASE_KAIOKEN_BUFF / 2000.0);
     combat->pointed_card = 0;
     combat->pointed_enemy = getFirstAliveEnemy(combat->enemy_group);
     combat->__is_card_selected = false;
@@ -38,23 +50,51 @@ void beginPlayerTurn(Combat *combat)
     buyHandCards(combat->player->stack, combat->player->hand, combat->player->discard_stack, DEFAULT_HAND_STACK);
 }
 
+void getNextEnemyAction(Enemy *enemy, int *actual_action)
+{
+    if (*actual_action >= enemy->actions->deck_size - 1)
+        *actual_action = 0;
+    else
+        (*actual_action)++;
+
+    if(enemy->actions->cards[*actual_action]->__is_skipable == true)
+        getNextEnemyAction(enemy, actual_action);
+
+    return;
+}
+
+void checkSkipableAction(Card *action)
+{
+    if (action->card_type != ATTACK && action->card_type != DEFENSE && action->card_type != POISON)
+    {
+        action->__is_skipable = true;
+        printf("marcou\n");
+    }
+}
+
 void enemyTurn(Combat *combat)
 {
     for (int i = 0; i < combat->enemy_group->enemy_amount; i++)
     {
         combat->enemy_group->enemies[i]->enemy_stats->shieldbar = 0;
-        combat->enemy_group->enemies[i]->enemy_stats->healthbar -= combat->enemy_group->enemies[i]->enemy_stats->poison;
-        combat->enemy_group->enemies[i]->enemy_stats->poison--;
+        if (combat->enemy_group->enemies[i]->enemy_stats->poison > 0)
+        {
+            combat->enemy_group->enemies[i]->enemy_stats->healthbar -= combat->enemy_group->enemies[i]->enemy_stats->poison;
+            combat->enemy_group->enemies[i]->enemy_stats->poison--;
+        }
         int *actual_action = &combat->enemy_group->enemies[i]->actual_action;
+        Card *action = combat->enemy_group->enemies[i]->actions->cards[*actual_action];
+        if (action->__is_skipable == true)
+        {
+            getNextEnemyAction(combat->enemy_group->enemies[i], actual_action);
+            printf("pulou a acao\n");
+        }
+
         if (combat->enemy_group->enemies[i]->enemy_stats->healthbar > 0)
         {
-            applyAction(combat, combat->enemy_group->enemies[i]->actions->cards[*actual_action], combat->enemy_group->enemies[i]->enemy_stats, combat->player->player_stats);
-            if (*actual_action >= combat->enemy_group->enemies[i]->actions->deck_size - 1)
-                *actual_action = 0;
-            else
-                (*actual_action)++;
-
-            printf("acao:%d\n", *actual_action);
+            applyAction(combat, action, combat->enemy_group->enemies[i]->enemy_stats, combat->player->player_stats);
+            checkSkipableAction(action);
+            getNextEnemyAction(combat->enemy_group->enemies[i], actual_action);
         }
     }
     beginPlayerTurn(combat);
@@ -66,41 +106,45 @@ void applyAction(Combat *combat, Card *used_card, Stats *caster, Stats *target)
     switch (used_card->card_type)
     {
     case DEFENSE:
-        caster->shieldbar += (used_card->effect_rate + caster->dexterity);
-        printf("\ndefendeu\n");
+        caster->shieldbar += floor((used_card->effect_rate * (1.0 + caster->dexterity / 100.0)));
         if (caster->entity_type == PLAYER)
             discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, false);
         break;
     case ATTACK:
-        printf("\natacou\n");
-        damage = floor((used_card->effect_rate + caster->strenght) * (target->vulnerability * 100.0) / caster->weakness);
+        damage = floor((used_card->effect_rate * (1.0 + caster->strength / 100.0)) *
+                       (1.0 + target->vulnerability / 100.0) *
+                       (1.0 - caster->weakness / 100.0));
+        if (damage > 0 && caster->lifesteal > 0)
+        {
+            int healed = floor(damage * (caster->lifesteal / 100.0));
+            caster->healthbar += healed;
+            printf("lifesteal curado: %d\n", healed);
+        }
+        int postShieldDamage = damage;
+
         if (target->shieldbar > 0)
         {
-            target->shieldbar -= damage;
-            damage = 0;
+            target->shieldbar -= postShieldDamage;
+            postShieldDamage = 0;
+
             if (target->shieldbar < 0)
             {
-                damage = -(target->shieldbar);
+                postShieldDamage = -(target->shieldbar);
                 target->shieldbar = 0;
             }
         }
-        if (damage > 0)
-            target->healthbar -= damage;
-        if (caster->lifesteal > 0)
-            caster->healthbar += floor(damage * (caster->lifesteal / 100.0));
+        if (postShieldDamage > 0)
+            target->healthbar -= postShieldDamage;
+
         if (target->healthbar <= 0)
         {
-            printf("entrou\n");
             target->healthbar = 0;
-            printf("tipo: %d\n", target->entity_type);
             if (target->entity_type == ENEMY)
-            {
                 combat->enemies_left--;
-                printf("faltam: %d\n", combat->enemies_left);
-            }
         }
         if (caster->entity_type == PLAYER)
             discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, false);
+
         break;
     case SPECIAL:
         while (combat->player->hand->deck_size > 0)
@@ -109,28 +153,38 @@ void applyAction(Combat *combat, Card *used_card, Stats *caster, Stats *target)
         break;
     case LIFESTEAL:
         caster->lifesteal = used_card->effect_rate;
-        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        if (caster->entity_type == PLAYER)
+            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
         break;
     case STRENGTH:
-        caster->strenght += used_card->effect_rate;
-        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        caster->strength += used_card->effect_rate;
+        if (caster->entity_type == PLAYER)
+            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
         break;
     case DEXTERITY:
         caster->dexterity += used_card->effect_rate;
-        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        if (caster->entity_type == PLAYER)
+            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
         break;
     case VULNERABILITY:
-        caster->vulnerability += used_card->effect_rate;
-        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        target->vulnerability += used_card->effect_rate;
+        if (caster->entity_type == PLAYER)
+            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
         break;
     case WEAKNESS:
-        caster->weakness += used_card->effect_rate;
-        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        target->weakness += used_card->effect_rate;
+        if (caster->entity_type == PLAYER)
+            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
         break;
     case POISON:
-        caster->poison += used_card->effect_rate;
-        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        target->poison += used_card->effect_rate;
+        if (caster->entity_type == PLAYER)
+            discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
         break;
+    case KAIOKEN:
+        caster->strength += used_card->effect_rate;
+        caster->__is_kaioken_active = true;
+        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
     }
 }
 
