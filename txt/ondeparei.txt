@@ -1,7 +1,6 @@
 ONDE EU PAREI:
 
-1 - Fazer a animação dos inimigos
-2- mensagem de fim de jogo/vitoria
+1- mensagem de fim de jogo/vitoria
 3 - Exibir os buffs/debuffs
 4 - musica
 

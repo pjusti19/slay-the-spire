@@ -8,6 +8,17 @@
 #include "deck.h"
 #include "combat.h"
 
+#define MAX_ENEMY_TYPES 10
+
+typedef struct
+{
+  ALLEGRO_BITMAP *frame[MAX_ENEMY_FRAMES];
+  int frame_count;
+  int current_frame;
+  int frame_timer;
+  int frame_speed;
+} AnimationSet;
+
 typedef struct
 {
   ALLEGRO_DISPLAY *display;
@@ -39,14 +50,20 @@ typedef struct
   int player_idle_frame_count;
   int player_idle_current_frame;
   int player_idle_frame_timer;
-  int player_idle_frame_speed; 
+  int player_idle_frame_speed;
+
+  AnimationSet *enemy_animations[DEFAULT_ENEMY_GROUP_SIZE];
 
   int actual_floor;
 } Renderer;
 
+void loadEnemyAnimations(Renderer *renderer);
+
 void FillRenderer(Renderer *renderer);
 
 void Render(Renderer *renderer);
+
+void freeEnemyAnimations(Renderer *renderer);
 
 void ClearRenderer(Renderer *renderer);
 

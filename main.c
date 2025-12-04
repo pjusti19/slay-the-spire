@@ -33,13 +33,14 @@ int main()
   ALLEGRO_EVENT event;
 
   // Structs
-  Renderer renderer;
-  FillRenderer(&renderer);
-  al_register_event_source(queue, al_get_display_event_source(renderer.display));
 
   Player *player = createPlayer();
+  Combat *combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE);
 
-  renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE);
+  Renderer renderer;
+  renderer.combat = combat;
+  FillRenderer(&renderer);
+  al_register_event_source(queue, al_get_display_event_source(renderer.display));
 
   renderer.actual_floor = 1;
   al_start_timer(timer);
@@ -50,17 +51,31 @@ int main()
 
     if (renderer.combat->enemies_left == 0)
     {
-      printf("passou o nivel %d!\n", renderer.actual_floor);
-      renderer.actual_floor++;
-      if (renderer.actual_floor <= 10)
+      if (renderer.actual_floor < 11)
       {
+        printf("passou o nivel %d!\n", renderer.actual_floor);
+        renderer.actual_floor++;
+
+        freeEnemyAnimations(&renderer);
+
         freeCombat(renderer.combat);
-        renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE); // Combat for the new accessed floor
-      }
-      else if (renderer.actual_floor == 11)
-      {
-        freeCombat(renderer.combat);
-        renderer.combat = createCombat(player, BOSS_BATTLE_SIZE); // Combat for the new accessed floor
+
+        if (renderer.actual_floor <= 10)
+        {
+          renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE);
+
+          loadEnemyAnimations(&renderer);
+
+          printf("Nova batalha iniciada no piso %d\n", renderer.actual_floor);
+        }
+        else if (renderer.actual_floor == 11)
+        {
+          renderer.combat = createCombat(player, BOSS_BATTLE_SIZE);
+
+          loadEnemyAnimations(&renderer);
+
+          printf("Batalha contra o BOSS!\n");
+        }
       }
       else
       {
@@ -68,6 +83,7 @@ int main()
         done = 1;
       }
     }
+
     if (renderer.combat->player->player_stats->healthbar <= 0)
     {
       printf("Derrota...\n");
@@ -78,6 +94,8 @@ int main()
     {
     case ALLEGRO_EVENT_TIMER:
       redraw = 1;
+
+      // Animations
       renderer.player_idle_frame_timer++;
 
       if (renderer.player_idle_frame_timer >= renderer.player_idle_frame_speed)
@@ -88,6 +106,25 @@ int main()
         if (renderer.player_idle_current_frame >= renderer.player_idle_frame_count)
           renderer.player_idle_current_frame = 0;
       }
+
+      int amount = renderer.combat->enemy_group->enemy_amount;
+
+      for (int i = 0; i < amount; i++)
+      {
+        AnimationSet *animation = renderer.enemy_animations[i];
+
+        animation->frame_timer++;
+
+        if (animation->frame_timer >= animation->frame_speed)
+        {
+          animation->frame_timer = 0;
+          animation->current_frame++;
+
+          if (animation->current_frame >= animation->frame_count)
+            animation->current_frame = 0;
+        }
+      }
+
       // Q LOGIC
       if (keyboard_keys[ALLEGRO_KEY_Q])
       {

@@ -66,6 +66,49 @@ void DrawCenteredScaledText(ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x,
   DrawScaledText(font, color, x, y, xscale, yscale, ALLEGRO_ALIGN_CENTRE, text);
 }
 
+void loadEnemyAnimations(Renderer *renderer)
+{
+  char path[128];
+  int amount = renderer->combat->enemy_group->enemy_amount;
+
+  for (int i = 0; i < amount; i++)
+  {
+    Enemy *enemy = renderer->combat->enemy_group->enemies[i];
+    AnimationSet *animation = malloc(sizeof(AnimationSet));
+    renderer->enemy_animations[i] = animation;
+
+    int frame_count = 0;
+
+    switch (enemy->enemy_type)
+    {
+    case WEAK:
+      frame_count = WEAK_ENEMY_IDLE_FRAMES;
+      break;
+    case STRONG:
+      frame_count = STRONG_ENEMY_IDLE_FRAMES;
+      break;
+    case BOSS:
+      frame_count = BOSS_IDLE_FRAMES;
+      break;
+    }
+
+    animation->frame_count = frame_count;
+    animation->current_frame = 0;
+    animation->frame_timer = 0;
+    animation->frame_speed = 8;
+
+    for (int j = 0; j < frame_count; j++)
+    {
+      sprintf(path, "assets/%s_enemy_idle_animation/frame_%d.png",
+              enemy->enemy_type == WEAK ? "weak" : enemy->enemy_type == STRONG ? "strong"
+                                                                               : "boss",
+              j);
+
+      animation->frame[j] = al_load_bitmap(path);
+    }
+  }
+}
+
 void FillRenderer(Renderer *renderer)
 {
   al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
@@ -98,16 +141,22 @@ void FillRenderer(Renderer *renderer)
   renderer->stamina_wheel = al_load_bitmap("assets/stamina_wheel.png");
   renderer->charge_gauge = al_load_bitmap("assets/charge_gauge.png");
 
+  renderer->player_idle_frame_count = PLAYER_IDLE_FRAMES;
+  renderer->player_idle_frame_speed = 8;
+  renderer->player_idle_current_frame = 0;
+  renderer->player_idle_frame_timer = 0;
+
   char path[128];
+
+  // PLAYER FRAMES
   for (int i = 0; i < PLAYER_IDLE_FRAMES; i++)
   {
     sprintf(path, "assets/player_idle_animation/frame_%d.png", i);
     renderer->player_frames[i] = al_load_bitmap(path);
   }
-  renderer->player_idle_frame_count = 16;
-  renderer->player_idle_current_frame = 0;
-  renderer->player_idle_frame_timer = 0;
-  renderer->player_idle_frame_speed = 8;
+
+  // ENEMY FRAMES
+  loadEnemyAnimations(renderer);
 
   renderer->font = al_create_builtin_font();
   must_init(renderer->font, "font");
@@ -250,7 +299,7 @@ void RenderPlayer(const Renderer *renderer, int begin_x, int mid_y, int width)
   float bar_width = (pr * 2) * 0.9;
   float x_begin = px - bar_width / 2.0;
   float x_end = px + bar_width / 2.0;
-  float health_bar_y = py + pr + 25;
+  float health_bar_y = py + pr + 15;
 
   RenderHealthBar(renderer->combat->player->player_stats,
                   x_begin, x_end, health_bar_y,
@@ -410,39 +459,54 @@ void RenderEnergy(Renderer *renderer, int begin_x, int mid_y, int radius, int ac
 void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
 {
   Enemy *enemy = renderer->combat->enemy_group->enemies[actual_enemy];
+  AnimationSet *anim = renderer->enemy_animations[actual_enemy];
 
-  // Adjustment for distinction of enemy type
-  int enemy_height = ENEMY_HEIGHT;
   int enemy_width = ENEMY_WIDTH;
+  int enemy_height = ENEMY_HEIGHT;
+
+  float health_bar_y;
   if (enemy->enemy_type == 2)
-    enemy_height += 70;
+  {
+    enemy_height += 130;
+    enemy_width += 200;
+    health_bar_y = y_top + enemy_height - 20;
+  }
   else if (enemy->enemy_type == 3)
   {
     enemy_height += 70;
     enemy_width += 70;
+    health_bar_y = y_top + enemy_height + 20;
   }
+  else
+    health_bar_y = y_top + enemy_height + 10;
 
-  if (renderer->combat->pointed_enemy == actual_enemy && renderer->combat->__has_enter_been_pressed == true)
+  if (renderer->combat->pointed_enemy == actual_enemy && renderer->combat->__has_enter_been_pressed)
   {
-    al_draw_filled_triangle(
-        x_left + enemy_width / 2.0, y_top - 10,      // ponta (embaixo, mais perto do inimigo)
-        x_left + enemy_width / 2.0 - 20, y_top - 40, // base esquerda (em cima)
-        x_left + enemy_width / 2.0 + 20, y_top - 40, // base direita (em cima)
-        al_map_rgb(255, 0, 0));
+    al_draw_filled_triangle(x_left + enemy_width / 2.0, y_top - 10,
+                            x_left + enemy_width / 2.0 - 20, y_top - 40,
+                            x_left + enemy_width / 2.0 + 20, y_top - 40,
+                            al_map_rgb(255, 0, 0));
   }
 
-  ALLEGRO_BITMAP *prev_bmp_target = al_get_target_bitmap();
+  ALLEGRO_BITMAP *frame = anim->frame[anim->current_frame];
+  int fw = al_get_bitmap_width(frame);
+  int fh = al_get_bitmap_height(frame);
 
-  ALLEGRO_BITMAP *enemy_bitmap = al_create_bitmap(enemy_width, enemy_height);
-  al_set_target_bitmap(enemy_bitmap);
+  float scale_x = (float)enemy_width / fw;
+  float scale_y = (float)enemy_height / fh;
 
-  al_draw_filled_rounded_rectangle(0, 0, enemy_width, enemy_height, 5, 5, al_map_rgb(255, 255, 255));
-  al_draw_rounded_rectangle(0, 0, enemy_width, enemy_height, 5, 5, al_map_rgb(255, 0, 0), 2);
+  al_draw_scaled_bitmap(frame, 0, 0, fw, fh,
+                        x_left + enemy_width, // flip compensation
+                        y_top,
+                        -enemy_width, // negative = mirrored
+                        enemy_height,
+                        0);
 
-  int actual_action = enemy->actual_action;
+  int action = enemy->actual_action;
   ALLEGRO_COLOR color;
-  char action_type[10] = "";
-  switch (enemy->actions->cards[actual_action]->card_type)
+  char action_type[10];
+
+  switch (enemy->actions->cards[action]->card_type)
   {
   case ATTACK:
     sprintf(action_type, "ATK");
@@ -466,23 +530,14 @@ void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
     break;
   }
 
-  al_set_target_bitmap(prev_bmp_target);
-
-  al_draw_scaled_bitmap(enemy_bitmap, 0, 0, enemy_width, enemy_height, x_left, y_top, enemy_width, enemy_height, 0);
-
-  float text_x = x_left + enemy_width - 5; // canto superior direito
-  float text_y = y_top - 10;
-
   DrawScaledText(renderer->font, color,
-                 text_x, text_y,
+                 x_left + enemy_width - 5,
+                 y_top - 10,
                  1.0, 1.0,
                  ALLEGRO_ALIGN_RIGHT,
                  action_type);
 
-  al_destroy_bitmap(enemy_bitmap);
-
   float x_end = x_left + enemy_width - 3;
-  float health_bar_y = y_top + enemy_height + 20;
   RenderHealthBar(enemy->enemy_stats, x_left + 3, x_end, health_bar_y, renderer->font);
 }
 
@@ -511,8 +566,25 @@ void Render(Renderer *renderer)
 
   for (int i = 0; i < renderer->combat->enemy_group->enemy_amount; i++)
   {
+    int begin_x;
+    int begin_y;
+    if (renderer->combat->enemy_group->enemies[i]->enemy_type == WEAK)
+    {
+      begin_x = ENEMY_BEGIN_X + 250 + (115 * i);
+      begin_y = ENEMY_BEGIN_Y + 65 + (20 * i);
+    }
+    else if (renderer->combat->enemy_group->enemies[i]->enemy_type == STRONG)
+    {
+      begin_x = ENEMY_BEGIN_X - 50;
+      begin_y = ENEMY_BEGIN_Y;
+    }
+    else if (renderer->combat->enemy_group->enemies[i]->enemy_type == BOSS)
+    {
+      begin_x = 600;
+      begin_y = 230;
+    }
     if (renderer->combat->enemy_group->enemies[i]->enemy_stats->healthbar > 0)
-      RenderEnemies(renderer, ENEMY_BEGIN_X + i * 150, ENEMY_BEGIN_Y + i * 50, i);
+      RenderEnemies(renderer, begin_x, begin_y, i);
   }
 
   RenderPlayerHand(renderer);
@@ -524,9 +596,29 @@ void Render(Renderer *renderer)
   al_flip_display();
 }
 
+void freeEnemyAnimations(Renderer *renderer)
+{
+  for (int i = 0; i < DEFAULT_ENEMY_GROUP_SIZE; i++)
+  {
+    AnimationSet *anim = renderer->enemy_animations[i];
+    if (!anim)
+      continue;
+
+    for (int j = 0; j < anim->frame_count; j++)
+      if (anim->frame[j])
+        al_destroy_bitmap(anim->frame[j]);
+
+    free(anim);
+    renderer->enemy_animations[i] = NULL;
+  }
+}
+
 void ClearRenderer(Renderer *renderer)
 {
-  freeCombat(renderer->combat);
+  freeEnemyAnimations(renderer);
+  for (int i = 0; i < renderer->player_idle_frame_count; i++)
+    al_destroy_bitmap(renderer->player_frames[i]);
+
   freePlayer(renderer->combat->player);
   al_destroy_display(renderer->display);
   al_destroy_bitmap(renderer->display_buffer);

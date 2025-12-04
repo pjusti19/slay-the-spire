@@ -14,9 +14,9 @@
 
 // Player
 #define PLAYER_BEGIN_X 180
-#define PLAYER_BEGIN_Y 230
-#define PLAYER_RADIUS 80
-#define PLAYER_IDLE_FRAMES 17
+#define PLAYER_BEGIN_Y 260
+#define PLAYER_RADIUS 60
+
 
 #define PLAYER_MAX_HEALTH 100
 #define PLAYER_INIT_SHIELD 0
@@ -76,8 +76,8 @@
 #define BOSS_BATTLE_SIZE 1
 #define DEFAULT_BOSS_HAND_SIZE 4
 
-#define ENEMY_BEGIN_X 550
-#define ENEMY_BEGIN_Y 120
+#define ENEMY_BEGIN_X 450
+#define ENEMY_BEGIN_Y 220
 
 #define ENEMY_WIDTH 100
 #define ENEMY_HEIGHT 100
@@ -94,5 +94,13 @@
 #define COLOR_GREY_PURPLE al_map_rgb(113, 75, 138)
 #define COLOR_GREY al_map_rgb(160, 160, 160)
 #define COLOR_FIRE_ORANGE al_map_rgb(255, 101, 11)
+
+
+// Animation
+#define PLAYER_IDLE_FRAMES 17
+#define WEAK_ENEMY_IDLE_FRAMES 27
+#define STRONG_ENEMY_IDLE_FRAMES 4
+#define BOSS_IDLE_FRAMES 24
+#define MAX_ENEMY_FRAMES 27
 
 #endif
