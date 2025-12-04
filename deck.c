@@ -41,8 +41,10 @@ Deck *createDeck(int deck_size, bool __create_cards)
                 deck->cards[i] = createCard(WEAKNESS, 2 + rand() % 2);
             else if (i < 31)
                 deck->cards[i] = createCard(POISON, 2 + rand() % 2);
-            else
+            else if (i < 32)
                 deck->cards[i] = createCard(KAIOKEN, DEFAULT_KAIOKEN_COST);
+            else
+                deck->cards[i] = createCard(CHARGE, INITIAL_MAX_ENERGY);
         }
         shuffleDeck(deck);
     }

@@ -12,6 +12,8 @@ typedef struct
   Deck *hand;
   Deck *discard_stack;
   int energy;
+  int max_energy;
+  int charges;
 } Player;
 
 Player *createPlayer();

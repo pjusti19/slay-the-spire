@@ -1,5 +1,7 @@
 ONDE EU PAREI:
 
-1 - Carta de custo variável 
-2 - Boss
-3 - Deixar o jogo bonitinho
+1 - Fazer a animação dos inimigos
+2- mensagem de fim de jogo/vitoria
+3 - Exibir os buffs/debuffs
+4 - musica
+

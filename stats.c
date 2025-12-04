@@ -15,8 +15,8 @@ Stats *createStats(int initial_health, int initial_shield, int initial_lifesteal
     stats->lifesteal = initial_lifesteal;
     stats->strength = 0;
     stats->dexterity = 0;
-    stats->vulnerability = 1;
-    stats->weakness = 1;
+    stats->vulnerability = 0;
+    stats->weakness = 0;
     stats->poison = 0;
     stats->__is_kaioken_active = false;
 

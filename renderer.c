@@ -79,6 +79,36 @@ void FillRenderer(Renderer *renderer)
       al_create_bitmap(DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT);
   must_init(renderer->display_buffer, "display buffer");
 
+  renderer->grass_field_background = al_load_bitmap("assets/hyrule_background.png");
+  renderer->divine_beast_background = al_load_bitmap("assets/divine_beast.png");
+  renderer->hyrule_castle_background = al_load_bitmap("assets/hyrule_castle.png");
+  renderer->defense_card = al_load_bitmap("assets/cards/defense.png");
+  renderer->attack_card = al_load_bitmap("assets/cards/attack.png");
+  renderer->poison_card = al_load_bitmap("assets/cards/poison.png");
+  renderer->vulnerability_card = al_load_bitmap("assets/cards/vulnerability.png");
+  renderer->weakness_card = al_load_bitmap("assets/cards/weakness.png");
+  renderer->lifesteal_card = al_load_bitmap("assets/cards/lifesteal.png");
+  renderer->strength_card = al_load_bitmap("assets/cards/strength.png");
+  renderer->dexterity_card = al_load_bitmap("assets/cards/dexterity.png");
+  renderer->special_card = al_load_bitmap("assets/cards/special.png");
+  renderer->charge_card = al_load_bitmap("assets/cards/charge.png");
+  renderer->kaioken_card = al_load_bitmap("assets/cards/triforce.png");
+  renderer->stack_top = al_load_bitmap("assets/cards/stack.png");
+  renderer->discard_stack_top = al_load_bitmap("assets/cards/discard.png");
+  renderer->stamina_wheel = al_load_bitmap("assets/stamina_wheel.png");
+  renderer->charge_gauge = al_load_bitmap("assets/charge_gauge.png");
+
+  char path[128];
+  for (int i = 0; i < PLAYER_IDLE_FRAMES; i++)
+  {
+    sprintf(path, "assets/player_idle_animation/frame_%d.png", i);
+    renderer->player_frames[i] = al_load_bitmap(path);
+  }
+  renderer->player_idle_frame_count = 16;
+  renderer->player_idle_current_frame = 0;
+  renderer->player_idle_frame_timer = 0;
+  renderer->player_idle_frame_speed = 8;
+
   renderer->font = al_create_builtin_font();
   must_init(renderer->font, "font");
 }
@@ -86,29 +116,51 @@ void FillRenderer(Renderer *renderer)
 void RenderBackground(Renderer *renderer)
 {
   al_clear_to_color(COLOR_BLACK);
+  if (renderer->actual_floor < 5)
+    al_draw_scaled_bitmap(renderer->grass_field_background, 0, 0, al_get_bitmap_width(renderer->grass_field_background),
+                          al_get_bitmap_height(renderer->grass_field_background), 0, 0, DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT, 0);
+  else if (renderer->actual_floor < 9)
+    al_draw_scaled_bitmap(renderer->divine_beast_background, 0, 0, al_get_bitmap_width(renderer->divine_beast_background),
+                          al_get_bitmap_height(renderer->divine_beast_background), 0, 0, DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT, 0);
+  else
+    al_draw_scaled_bitmap(renderer->hyrule_castle_background, 0, 0, al_get_bitmap_width(renderer->hyrule_castle_background),
+                          al_get_bitmap_height(renderer->hyrule_castle_background), 0, 0, DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT, 0);
 }
 
-void RenderStack(Renderer *renderer, int x_left, int y_top, Deck *stack)
+void RenderStack(Renderer *renderer, int x_left, int y_top, Deck *stack, bool __is_discard_stack)
 {
   ALLEGRO_BITMAP *prev_bmp_target = al_get_target_bitmap();
 
   ALLEGRO_BITMAP *deck_bitmap = al_create_bitmap(DECK_WIDTH, DECK_HEIGHT);
   al_set_target_bitmap(deck_bitmap);
 
-  al_draw_filled_rounded_rectangle(0, 0, DECK_WIDTH, DECK_HEIGHT, 10, 0,
-                                   al_map_rgb(255, 255, 255));
+  al_clear_to_color(al_map_rgba(0, 0, 0, 0));
 
-  float xscale = 1, yscale = 1;
-  char text[100] = "";
+  float proportion;
+  if (__is_discard_stack == false)
+  {
+    al_draw_scaled_bitmap(renderer->stack_top, 0, 0, al_get_bitmap_width(renderer->stack_top),
+                          al_get_bitmap_height(renderer->stack_top), 0, 0, DECK_WIDTH, DECK_HEIGHT, 0);
+    proportion = 0.84;
+  }
+  else
+  {
+    al_draw_scaled_bitmap(renderer->discard_stack_top, 0, 0, al_get_bitmap_width(renderer->discard_stack_top),
+                          al_get_bitmap_height(renderer->discard_stack_top), 0, 0, DECK_WIDTH, DECK_HEIGHT, 0);
+    proportion = 0.81;
+  }
+  char text[64];
   sprintf(text, "Cards: %d", stack->deck_size);
-  DrawScaledText(renderer->font, COLOR_BLACK, (DECK_WIDTH * 0.5) / xscale,
-                 (DECK_HEIGHT * 0.5) / yscale, xscale, yscale,
-                 ALLEGRO_ALIGN_CENTER, text);
+
+  float xscale = 1.0;
+  float yscale = 1.0;
+
+  DrawScaledText(renderer->font, al_map_rgb(0, 0, 0), (DECK_WIDTH * 0.5) / xscale, (DECK_HEIGHT * proportion) / yscale, xscale, yscale, ALLEGRO_ALIGN_CENTER, text);
 
   al_set_target_bitmap(prev_bmp_target);
 
-  al_draw_scaled_bitmap(deck_bitmap, 0, 0, DECK_WIDTH, DECK_HEIGHT, x_left,
-                        y_top, DECK_WIDTH, DECK_HEIGHT, 0);
+  al_draw_scaled_bitmap(deck_bitmap, 0, 0, DECK_WIDTH, DECK_HEIGHT, x_left, y_top, DECK_WIDTH, DECK_HEIGHT, 0);
+
   al_destroy_bitmap(deck_bitmap);
 }
 
@@ -143,7 +195,7 @@ void RenderHealthBar(Stats *stats, float x_begin, float x_end, float y_down_left
   ALLEGRO_COLOR healthbar_color = COLOR_DARK_RED;
   if (stats->poison > 0)
     healthbar_color = COLOR_GREY_GREEN;
-  else if(stats->__is_kaioken_active == true)
+  else if (stats->__is_kaioken_active == true)
     healthbar_color = COLOR_FIRE_ORANGE;
 
   al_draw_filled_rounded_rectangle(
@@ -173,25 +225,31 @@ void RenderPlayer(const Renderer *renderer, int begin_x, int mid_y, int width)
   float px = begin_x + pr;
   float py = mid_y;
 
-  al_draw_filled_circle(px, py, pr, al_map_rgb(255, 255, 255));
+  ALLEGRO_BITMAP *frame = renderer->player_frames[renderer->player_idle_current_frame];
+  int fw = al_get_bitmap_width(frame);
+  int fh = al_get_bitmap_height(frame);
+
+  float scale = (pr * 2.0f) / fw;
+
+  al_draw_scaled_bitmap(frame, 0, 0, fw, fh,
+                        px - (fw * scale / 2),
+                        py - (fh * scale / 2),
+                        fw * scale, fh * scale, 0);
 
   if (renderer->combat->__has_passive_card_been_used)
   {
     float tip_x = px;
     float tip_y = py - pr - 10;
 
-    al_draw_filled_triangle(
-        tip_x, tip_y,
-        tip_x - 20, tip_y - 30,
-        tip_x + 20, tip_y - 30,
-        al_map_rgb(255, 0, 0));
+    al_draw_filled_triangle(tip_x, tip_y,
+                            tip_x - 20, tip_y - 30,
+                            tip_x + 20, tip_y - 30,
+                            al_map_rgb(255, 0, 0));
   }
 
-  float bar_width = (pr * 2) * 0.9f;
-
-  float x_begin = px - bar_width / 2.0f;
-  float x_end = px + bar_width / 2.0f;
-
+  float bar_width = (pr * 2) * 0.9;
+  float x_begin = px - bar_width / 2.0;
+  float x_end = px + bar_width / 2.0;
   float health_bar_y = py + pr + 25;
 
   RenderHealthBar(renderer->combat->player->player_stats,
@@ -201,109 +259,119 @@ void RenderPlayer(const Renderer *renderer, int begin_x, int mid_y, int width)
 
 void RenderCard(const Renderer *renderer, int x_left, int y_top, Card *card, bool __is_card_pointed)
 {
-  ALLEGRO_BITMAP *card_bitmap = al_create_bitmap(CARD_WIDTH + 10, CARD_HEIGHT);
-  al_set_target_bitmap(card_bitmap);
-
-  al_draw_filled_rounded_rectangle(10, 10, CARD_WIDTH - 10, CARD_HEIGHT - 10, 5, 5, al_map_rgb(255, 255, 255));
-  al_draw_rounded_rectangle(10, 10, CARD_WIDTH - 10, CARD_HEIGHT - 10, 5, 5, al_map_rgb(255, 0, 0), 2);
-
-  char card_type[20];
-  char effect_rate[64];
-  char cost[20];
-
-  sprintf(cost, "Custo: %d", card->cost);
+  ALLEGRO_BITMAP *card_sprite = NULL;
 
   switch (card->card_type)
   {
   case DEFENSE:
-    sprintf(card_type, "Defesa");
-    sprintf(effect_rate, "Escudo: %d", card->effect_rate);
+    card_sprite = renderer->defense_card;
     break;
-
   case ATTACK:
-    sprintf(card_type, "Ataque");
-    sprintf(effect_rate, "Dano: %d", card->effect_rate);
-    break;
-
-  case SPECIAL:
-    sprintf(card_type, "Especial");
-    sprintf(effect_rate, "Nova mão");
-    break;
-
-  case LIFESTEAL:
-    sprintf(card_type, "Vampirismo");
-    sprintf(effect_rate, "Cura: %d%%\n"
-                         "do ataque",
-            card->effect_rate);
-    break;
-  case STRENGTH:
-    sprintf(card_type, "Força");
-    sprintf(effect_rate, "+ %%%d de\n"
-                         "dano extra",
-            card->effect_rate);
-    break;
-  case DEXTERITY:
-    sprintf(card_type, "Destreza");
-    sprintf(effect_rate, "+ %%%d de\n"
-                         "esc. extra",
-            card->effect_rate);
-    break;
-  case VULNERABILITY:
-    sprintf(card_type, "Vulneravel");
-    sprintf(effect_rate, "+ %d%% de\n"
-                         "dano",
-            card->effect_rate);
-    break;
-  case WEAKNESS:
-    sprintf(card_type, "Fraqueza");
-    sprintf(effect_rate, "Causa -%d%%\n"
-                         "de dano",
-            card->effect_rate);
+    card_sprite = renderer->attack_card;
     break;
   case POISON:
-    sprintf(card_type, "Veneno");
-    sprintf(effect_rate, "Base: %d",
-            card->effect_rate);
+    card_sprite = renderer->poison_card;
+    break;
+  case VULNERABILITY:
+    card_sprite = renderer->vulnerability_card;
+    break;
+  case WEAKNESS:
+    card_sprite = renderer->weakness_card;
+    break;
+  case LIFESTEAL:
+    card_sprite = renderer->lifesteal_card;
+    break;
+  case STRENGTH:
+    card_sprite = renderer->strength_card;
+    break;
+  case DEXTERITY:
+    card_sprite = renderer->dexterity_card;
+    break;
+  case SPECIAL:
+    card_sprite = renderer->special_card;
     break;
   case KAIOKEN:
-    sprintf(card_type, "Kaioken");
-    sprintf(effect_rate, "+%%%d de dano\n" 
-                         "-%%%d de vida\n"
-                         "por rodada",
-            card->effect_rate, card->effect_rate / 10);
+    card_sprite = renderer->kaioken_card;
+    break;
+  case CHARGE:
+    card_sprite = renderer->charge_card;
     break;
   }
 
-  float xscale = 1, yscale = 1;
-  float font_height = al_get_font_line_height(renderer->font);
-
-  DrawScaledText(renderer->font, COLOR_BLACK, CARD_WIDTH * 0.5,
-                 CARD_HEIGHT * 0.3, 1, 1, ALLEGRO_ALIGN_CENTER, card_type);
-
-  if (card->card_type != ATTACK && card->card_type != DEFENSE && card->card_type != SPECIAL)
-    DrawMultilineText(renderer->font, COLOR_BLACK,
-                      CARD_WIDTH * 0.5,
-                      CARD_HEIGHT * 0.4 + font_height,
-                      font_height,
-                      ALLEGRO_ALIGN_CENTER,
-                      effect_rate);
-  else
-    DrawScaledText(renderer->font, COLOR_BLACK, CARD_WIDTH * 0.5,
-                   CARD_HEIGHT * 0.4 + font_height,
-                   1, 1, ALLEGRO_ALIGN_CENTER, effect_rate);
-
-  DrawScaledText(renderer->font, COLOR_BLACK, CARD_WIDTH * 0.5,
-                 CARD_HEIGHT * 0.5 + font_height * 3,
-                 1, 1, ALLEGRO_ALIGN_CENTER, cost);
+  if (!card_sprite)
+    return;
 
   if (__is_card_pointed)
-    y_top -= 70;
+    y_top -= 40;
 
-  al_set_target_bitmap(renderer->display_buffer);
-  al_draw_scaled_bitmap(card_bitmap, 0, 0, CARD_WIDTH, CARD_HEIGHT,
-                        x_left, y_top, CARD_WIDTH, CARD_HEIGHT, 0);
+  al_draw_scaled_bitmap(
+      card_sprite,
+      0, 0,
+      al_get_bitmap_width(card_sprite),
+      al_get_bitmap_height(card_sprite),
+      x_left, y_top,
+      CARD_WIDTH, CARD_HEIGHT,
+      0);
 
-  al_destroy_bitmap(card_bitmap);
+  char effect_rate[64];
+  char cost[32];
+  float font_height = al_get_font_line_height(renderer->font);
+
+  sprintf(cost, "Cost: %d", card->cost);
+
+  double effect_height_scale = 0.75;
+  switch (card->card_type)
+  {
+  case DEFENSE:
+    sprintf(effect_rate, "Shield: %d", card->effect_rate);
+    break;
+  case ATTACK:
+    sprintf(effect_rate, "Damage: %d", card->effect_rate);
+    break;
+  case SPECIAL:
+    sprintf(effect_rate, "New hand");
+    break;
+  case LIFESTEAL:
+    sprintf(effect_rate, "Heal %d%%\n", card->effect_rate);
+    break;
+  case STRENGTH:
+    sprintf(effect_rate, "+%d%% damage", card->effect_rate);
+    break;
+  case DEXTERITY:
+    sprintf(effect_rate, "+%d%% shield", card->effect_rate);
+    break;
+  case VULNERABILITY:
+    sprintf(effect_rate, "-%d%% armor", card->effect_rate);
+    break;
+  case WEAKNESS:
+    sprintf(effect_rate, "-%d%% damage", card->effect_rate);
+    break;
+  case POISON:
+    sprintf(effect_rate, "Base: %d", card->effect_rate);
+    break;
+  case KAIOKEN:
+    sprintf(effect_rate, "2x damage\n"
+                         "Magic curse",
+            card->effect_rate / 10);
+    effect_height_scale = 0.7;
+    break;
+  case CHARGE:
+    sprintf(effect_rate, "+%d charge", card->effect_rate);
+    break;
+  }
+
+  DrawMultilineText(renderer->font, COLOR_BLACK,
+                    x_left + CARD_WIDTH * 0.5,
+                    y_top + CARD_HEIGHT * effect_height_scale,
+                    font_height,
+                    ALLEGRO_ALIGN_CENTER,
+                    effect_rate);
+
+  DrawScaledText(renderer->font, COLOR_BLACK,
+                 x_left + CARD_WIDTH * 0.5,
+                 y_top + CARD_HEIGHT * 0.83,
+                 1, 1,
+                 ALLEGRO_ALIGN_CENTER, cost);
 }
 
 void RenderPlayerHand(Renderer *renderer)
@@ -314,19 +382,29 @@ void RenderPlayerHand(Renderer *renderer)
     bool __is_card_pointed = false;
     if (renderer->combat->pointed_card == i)
       __is_card_pointed = true;
-    RenderCard(renderer, HAND_BEGIN_X + i * 120 + (60 * -(renderer->combat->player->hand->deck_size - DEFAULT_HAND_STACK)), HAND_BEGIN_Y, renderer->combat->player->hand->cards[i], __is_card_pointed);
+    RenderCard(renderer, HAND_BEGIN_X + i * 100 + (60 * -(renderer->combat->player->hand->deck_size - DEFAULT_HAND_STACK)), HAND_BEGIN_Y, renderer->combat->player->hand->cards[i], __is_card_pointed);
   }
 }
 
-void RenderEnergy(Renderer *renderer, int begin_x, int mid_y, int width)
+void RenderEnergy(Renderer *renderer, int begin_x, int mid_y, int radius, int actual_points, int max_points, ALLEGRO_BITMAP *image, int height_adjustment)
 {
-  al_draw_filled_circle(begin_x + width / 2.0, mid_y, width, al_map_rgb(255, 251, 0));
+  int width = al_get_bitmap_width(image);
+  int height = al_get_bitmap_height(image);
 
-  char energy_gauge[10] = "";
-  sprintf(energy_gauge, "%d/3", renderer->combat->player->energy);
+  float scale = (radius * 2.0) / (float)height;
+  float final_w = width * scale;
+  float final_h = height * scale;
 
-  float xscale = 1.7, yscale = 1.7;
-  DrawScaledText(renderer->font, COLOR_BLACK, ENERGY_GAUGE_BEGIN_X / xscale, ENERGY_GAUGE_BEGIN_Y / yscale, xscale, yscale, ALLEGRO_ALIGN_LEFT, energy_gauge);
+  al_draw_scaled_bitmap(image, 0, 0, width, height, begin_x - (final_w / 2.0f), mid_y - (final_h / 2.0f), final_w, final_h, 0);
+
+  char buffer[16];
+
+  sprintf(buffer, "%d/%d", actual_points, max_points);
+
+  float xscale = 1.3f, yscale = 1.3f;
+  float text_x = (float)begin_x / xscale;
+  float text_y = mid_y + final_h / 2.0 + 8.0 - 90;
+  DrawScaledText(renderer->font, al_map_rgb(255, 255, 255), text_x + 1, text_y + 5 - height_adjustment, xscale, yscale, ALLEGRO_ALIGN_CENTER, buffer);
 }
 
 void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
@@ -335,25 +413,31 @@ void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
 
   // Adjustment for distinction of enemy type
   int enemy_height = ENEMY_HEIGHT;
+  int enemy_width = ENEMY_WIDTH;
   if (enemy->enemy_type == 2)
     enemy_height += 70;
+  else if (enemy->enemy_type == 3)
+  {
+    enemy_height += 70;
+    enemy_width += 70;
+  }
 
   if (renderer->combat->pointed_enemy == actual_enemy && renderer->combat->__has_enter_been_pressed == true)
   {
     al_draw_filled_triangle(
-        x_left + ENEMY_WIDTH / 2.0, y_top - 10,      // ponta (embaixo, mais perto do inimigo)
-        x_left + ENEMY_WIDTH / 2.0 - 20, y_top - 40, // base esquerda (em cima)
-        x_left + ENEMY_WIDTH / 2.0 + 20, y_top - 40, // base direita (em cima)
+        x_left + enemy_width / 2.0, y_top - 10,      // ponta (embaixo, mais perto do inimigo)
+        x_left + enemy_width / 2.0 - 20, y_top - 40, // base esquerda (em cima)
+        x_left + enemy_width / 2.0 + 20, y_top - 40, // base direita (em cima)
         al_map_rgb(255, 0, 0));
   }
 
   ALLEGRO_BITMAP *prev_bmp_target = al_get_target_bitmap();
 
-  ALLEGRO_BITMAP *enemy_bitmap = al_create_bitmap(ENEMY_WIDTH, enemy_height);
+  ALLEGRO_BITMAP *enemy_bitmap = al_create_bitmap(enemy_width, enemy_height);
   al_set_target_bitmap(enemy_bitmap);
 
-  al_draw_filled_rounded_rectangle(0, 0, ENEMY_WIDTH, enemy_height, 5, 5, al_map_rgb(255, 255, 255));
-  al_draw_rounded_rectangle(0, 0, ENEMY_WIDTH, enemy_height, 5, 5, al_map_rgb(255, 0, 0), 2);
+  al_draw_filled_rounded_rectangle(0, 0, enemy_width, enemy_height, 5, 5, al_map_rgb(255, 255, 255));
+  al_draw_rounded_rectangle(0, 0, enemy_width, enemy_height, 5, 5, al_map_rgb(255, 0, 0), 2);
 
   int actual_action = enemy->actual_action;
   ALLEGRO_COLOR color;
@@ -384,9 +468,9 @@ void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
 
   al_set_target_bitmap(prev_bmp_target);
 
-  al_draw_scaled_bitmap(enemy_bitmap, 0, 0, ENEMY_WIDTH, enemy_height, x_left, y_top, ENEMY_WIDTH, enemy_height, 0);
+  al_draw_scaled_bitmap(enemy_bitmap, 0, 0, enemy_width, enemy_height, x_left, y_top, enemy_width, enemy_height, 0);
 
-  float text_x = x_left + ENEMY_WIDTH - 5; // canto superior direito
+  float text_x = x_left + enemy_width - 5; // canto superior direito
   float text_y = y_top - 10;
 
   DrawScaledText(renderer->font, color,
@@ -397,7 +481,7 @@ void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
 
   al_destroy_bitmap(enemy_bitmap);
 
-  float x_end = x_left + ENEMY_WIDTH - 3;
+  float x_end = x_left + enemy_width - 3;
   float health_bar_y = y_top + enemy_height + 20;
   RenderHealthBar(enemy->enemy_stats, x_left + 3, x_end, health_bar_y, renderer->font);
 }
@@ -409,14 +493,21 @@ void Render(Renderer *renderer)
   RenderBackground(renderer);
 
   if (renderer->combat->player->stack->deck_size > 0)
-    RenderStack(renderer, DRAW_DECK_X, DRAW_DECK_Y, renderer->combat->player->stack);
+    RenderStack(renderer, DRAW_DECK_X, DRAW_DECK_Y, renderer->combat->player->stack, false);
 
   if (renderer->combat->player->discard_stack->deck_size > 0)
-    RenderStack(renderer, DRAW_DECK_X + 815, DRAW_DECK_Y, renderer->combat->player->discard_stack);
+    RenderStack(renderer, DRAW_DECK_X + 815, DRAW_DECK_Y, renderer->combat->player->discard_stack, true);
 
-  RenderPlayer(renderer, PLAYER_BEGIN_X, PLAYER_BEGIN_Y + PLAYER_RADIUS, PLAYER_RADIUS);
+  if (renderer->combat->player->player_stats->healthbar > 0)
+    RenderPlayer(renderer, PLAYER_BEGIN_X, PLAYER_BEGIN_Y + PLAYER_RADIUS, PLAYER_RADIUS);
 
-  RenderEnergy(renderer, ENERGY_GAUGE_BEGIN_X, ENERGY_GAUGE_BEGIN_Y, ENERGY_GAUGE_RADIUS);
+  // Stamina
+  RenderEnergy(renderer, ENERGY_GAUGE_BEGIN_X, ENERGY_GAUGE_BEGIN_Y + 10, ENERGY_GAUGE_RADIUS,
+               renderer->combat->player->energy, renderer->combat->player->max_energy, renderer->stamina_wheel, 0);
+
+  // Charges
+  RenderEnergy(renderer, CHARGE_GAUGE_BEGIN_X, CHARGE_GAUGE_BEGIN_Y - 30, CHARGE_GAUGE_RADIUS,
+               renderer->combat->player->charges, MAX_CHARGES, renderer->charge_gauge, 17);
 
   for (int i = 0; i < renderer->combat->enemy_group->enemy_amount; i++)
   {

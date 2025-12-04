@@ -33,7 +33,7 @@ Combat *createCombat(Player *player, int enemy_amount)
 
 void beginPlayerTurn(Combat *combat)
 {
-    combat->player->energy = 3;
+    combat->player->energy = combat->player->max_energy;
     combat->player->player_stats->shieldbar = 0;
     if (combat->player->player_stats->poison > 0)
     {
@@ -41,13 +41,16 @@ void beginPlayerTurn(Combat *combat)
         combat->player->player_stats->poison--;
     }
     if (combat->player->player_stats->__is_kaioken_active == true)
+    {
         combat->player->player_stats->healthbar -= combat->player->player_stats->max_health * (BASE_KAIOKEN_BUFF / 2000.0);
+    }
     combat->pointed_card = 0;
     combat->pointed_enemy = getFirstAliveEnemy(combat->enemy_group);
     combat->__is_card_selected = false;
     combat->__has_enter_been_pressed = false;
     combat->__has_passive_card_been_used = false;
     buyHandCards(combat->player->stack, combat->player->hand, combat->player->discard_stack, DEFAULT_HAND_STACK);
+    updateChargeCard(combat->player->hand, combat->player->energy);
 }
 
 void getNextEnemyAction(Enemy *enemy, int *actual_action)
@@ -57,7 +60,7 @@ void getNextEnemyAction(Enemy *enemy, int *actual_action)
     else
         (*actual_action)++;
 
-    if(enemy->actions->cards[*actual_action]->__is_skipable == true)
+    if (enemy->actions->cards[*actual_action]->__is_skipable == true)
         getNextEnemyAction(enemy, actual_action);
 
     return;
@@ -81,14 +84,16 @@ void enemyTurn(Combat *combat)
         {
             combat->enemy_group->enemies[i]->enemy_stats->healthbar -= combat->enemy_group->enemies[i]->enemy_stats->poison;
             combat->enemy_group->enemies[i]->enemy_stats->poison--;
+            if (combat->enemy_group->enemies[i]->enemy_stats->healthbar <= 0)
+            {
+                combat->enemy_group->enemies[i]->enemy_stats->healthbar = 0;
+                combat->enemies_left--;
+            }
         }
         int *actual_action = &combat->enemy_group->enemies[i]->actual_action;
         Card *action = combat->enemy_group->enemies[i]->actions->cards[*actual_action];
         if (action->__is_skipable == true)
-        {
             getNextEnemyAction(combat->enemy_group->enemies[i], actual_action);
-            printf("pulou a acao\n");
-        }
 
         if (combat->enemy_group->enemies[i]->enemy_stats->healthbar > 0)
         {
@@ -106,19 +111,21 @@ void applyAction(Combat *combat, Card *used_card, Stats *caster, Stats *target)
     switch (used_card->card_type)
     {
     case DEFENSE:
-        caster->shieldbar += floor((used_card->effect_rate * (1.0 + caster->dexterity / 100.0)));
+        caster->shieldbar += ceil((used_card->effect_rate * (double)(1.0 + caster->dexterity / 100.0)));
         if (caster->entity_type == PLAYER)
             discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, false);
         break;
     case ATTACK:
-        damage = floor((used_card->effect_rate * (1.0 + caster->strength / 100.0)) *
-                       (1.0 + target->vulnerability / 100.0) *
-                       (1.0 - caster->weakness / 100.0));
+        damage = ceil((used_card->effect_rate * (double)(1.0 + caster->strength / 100.0)) *
+                      (double)(1.0 + target->vulnerability / 100.0) *
+                      (double)(1.0 - caster->weakness / 100.0));
         if (damage > 0 && caster->lifesteal > 0)
         {
             int healed = floor(damage * (caster->lifesteal / 100.0));
             caster->healthbar += healed;
-            printf("lifesteal curado: %d\n", healed);
+
+            if (caster->healthbar > caster->max_health) // No overheal!
+                caster->healthbar = caster->max_health;
         }
         int postShieldDamage = damage;
 
@@ -185,6 +192,30 @@ void applyAction(Combat *combat, Card *used_card, Stats *caster, Stats *target)
         caster->strength += used_card->effect_rate;
         caster->__is_kaioken_active = true;
         discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+    case CHARGE:
+        combat->player->charges += used_card->cost;
+        if (combat->player->charges >= 5)
+        {
+            combat->player->charges = 0;
+            caster->max_health += CHARGE_HEALTHBAR_BUFF;
+            caster->healthbar += CHARGE_HEALTHBAR_BUFF;
+            combat->player->max_energy += CHARGE_ENERGY_BUFF;
+            combat->player->energy += CHARGE_ENERGY_BUFF;
+        }
+        discardCard(combat->player->hand, &combat->pointed_card, combat->player->discard_stack, true);
+        break;
+    }
+}
+
+void updateChargeCard(Deck *hand, int actual_energy)
+{
+    for (int i = 0; i < hand->deck_size; i++)
+    {
+        if (hand->cards[i]->card_type == CHARGE)
+        {
+            hand->cards[i]->effect_rate = hand->cards[i]->cost = actual_energy;
+            break;
+        }
     }
 }
 

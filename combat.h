@@ -26,4 +26,6 @@ void enemyTurn(Combat *combat);
 
 void freeCombat(Combat *combat);
 
+void updateChargeCard(Deck *hand, int actual_energy);
+
 #endif

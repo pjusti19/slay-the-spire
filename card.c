@@ -17,7 +17,7 @@ Card *createCard(ActionType card_type, int cost)
     else if (card_type == LIFESTEAL)
         card->effect_rate = BASE_LIFESTEAL_EFFECT + rand() % 11;
     else if (card_type == STRENGTH || card_type == DEXTERITY)
-        card->effect_rate = 5 * cost;
+        card->effect_rate = 12 * cost;
     else if (card_type == VULNERABILITY)
         card->effect_rate = cost * 20;
     else if (card_type == WEAKNESS)
@@ -26,6 +26,8 @@ Card *createCard(ActionType card_type, int cost)
         card->effect_rate = cost * 3;
     else if (card_type == KAIOKEN)
         card->effect_rate = BASE_KAIOKEN_BUFF;
+    else if (card_type == CHARGE)
+        card->effect_rate = cost; // initialized with 0
     else // DEFENSE & ATTACK
     {
 

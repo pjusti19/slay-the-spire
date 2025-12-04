@@ -8,7 +8,7 @@ typedef enum
 {
   WEAK = 1,
   STRONG = 2,
-  //  TITAN = 3 -> implementar ao final do tp
+  BOSS = 3,
 } EnemyType;
 
 typedef struct

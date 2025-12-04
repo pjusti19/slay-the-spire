@@ -10,7 +10,8 @@ Player *createPlayer()
   if (player == NULL)
     allocFail("Player");
 
-  player->energy = 0;
+  player->energy = player->max_energy = INITIAL_MAX_ENERGY;
+  player->charges = 0;
   player->player_stats = createStats(PLAYER_MAX_HEALTH, PLAYER_INIT_SHIELD, DEAFULT_INIT_LIFESTEAL);
   player->player_stats->entity_type = PLAYER;
   // player->deck = createDeck(MAX_DECK_STACK, true);

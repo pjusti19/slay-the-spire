@@ -15,22 +15,28 @@ EnemyGroup *createEnemyGroup(int enemy_amount)
     enemy_group->enemies = (Enemy **)malloc(enemy_group->enemy_amount * sizeof(Enemy *));
     if (enemy_group->enemies == NULL)
         allocFail("Enemy group enemies");
-    int drawed_number = -1;
-    bool __has_created_strong_enemy = false;
-    for (int i = 0; i < enemy_group->enemy_amount; i++)
+    if (enemy_group->enemy_amount > 1)
     {
-        if (__has_created_strong_enemy == false)
+        int drawed_number = -1;
+        bool __has_created_strong_enemy = false;
+        for (int i = 0; i < enemy_group->enemy_amount; i++)
         {
-            drawed_number = 1 + rand() % 100;
-            if (drawed_number <= 5)
+            if (__has_created_strong_enemy == false)
             {
-                enemy_group->enemies[i] = createEnemy(STRONG);
-                __has_created_strong_enemy = true;
-                continue;
+                drawed_number = 1 + rand() % 100;
+                if (drawed_number <= 5)
+                {
+                    enemy_group->enemies[i] = createEnemy(STRONG);
+                    __has_created_strong_enemy = true;
+                    continue;
+                }
             }
-        }
 
-        enemy_group->enemies[i] = createEnemy(WEAK);
+            enemy_group->enemies[i] = createEnemy(WEAK);
+        }
+    }
+    else{
+        enemy_group->enemies[0] = createEnemy(BOSS);
     }
 
     return enemy_group;
@@ -39,8 +45,8 @@ EnemyGroup *createEnemyGroup(int enemy_amount)
 int getFirstAliveEnemy(EnemyGroup *enemy_group)
 {
     int i;
-    for(i = 0; i < enemy_group->enemy_amount; i++)
-        if(enemy_group->enemies[i]->enemy_stats->healthbar > 0)
+    for (i = 0; i < enemy_group->enemy_amount; i++)
+        if (enemy_group->enemies[i]->enemy_stats->healthbar > 0)
             break;
 
     return i;

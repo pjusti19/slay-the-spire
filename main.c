@@ -41,8 +41,7 @@ int main()
 
   renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE);
 
-  // Combat aux variables
-  int actual_floor = 1;
+  renderer.actual_floor = 1;
   al_start_timer(timer);
   while (1)
   {
@@ -51,13 +50,18 @@ int main()
 
     if (renderer.combat->enemies_left == 0)
     {
-      printf("passou o nivel %d!\n", actual_floor);
-      actual_floor++;
-      if (actual_floor <= 10)
+      printf("passou o nivel %d!\n", renderer.actual_floor);
+      renderer.actual_floor++;
+      if (renderer.actual_floor <= 10)
       {
         freeCombat(renderer.combat);
         renderer.combat = createCombat(player, DEFAULT_ENEMY_GROUP_SIZE); // Combat for the new accessed floor
-      } 
+      }
+      else if (renderer.actual_floor == 11)
+      {
+        freeCombat(renderer.combat);
+        renderer.combat = createCombat(player, BOSS_BATTLE_SIZE); // Combat for the new accessed floor
+      }
       else
       {
         printf("Vitoria!\n");
@@ -74,6 +78,16 @@ int main()
     {
     case ALLEGRO_EVENT_TIMER:
       redraw = 1;
+      renderer.player_idle_frame_timer++;
+
+      if (renderer.player_idle_frame_timer >= renderer.player_idle_frame_speed)
+      {
+        renderer.player_idle_frame_timer = 0;
+        renderer.player_idle_current_frame++;
+
+        if (renderer.player_idle_current_frame >= renderer.player_idle_frame_count)
+          renderer.player_idle_current_frame = 0;
+      }
       // Q LOGIC
       if (keyboard_keys[ALLEGRO_KEY_Q])
       {
@@ -142,6 +156,8 @@ int main()
           renderer.combat->player->energy -= renderer.combat->player->hand->cards[renderer.combat->pointed_card]->cost;
           applyAction(renderer.combat, renderer.combat->player->hand->cards[renderer.combat->pointed_card],
                       renderer.combat->player->player_stats, renderer.combat->enemy_group->enemies[renderer.combat->pointed_enemy]->enemy_stats);
+          updateChargeCard(renderer.combat->player->hand, renderer.combat->player->energy);
+          printf("enemies left: %d\n", renderer.combat->enemies_left);
         }
       }
       // CANCEL ACTION LOGIC (EXTRA)
