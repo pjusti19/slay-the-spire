@@ -23,7 +23,7 @@
 
 // Deck
 #define DRAW_DECK_X 30
-#define DRAW_DECK_Y 400
+#define DRAW_DECK_Y 408q
 
 #define DECK_WIDTH 100
 #define DECK_HEIGHT 130
@@ -87,14 +87,13 @@
 #define COLOR_WHITE al_map_rgb(255,255,255)
 #define COLOR_RED al_map_rgb(255, 0, 0)
 #define COLOR_DARK_RED al_map_rgb(192, 3, 3)
-#define COLOR_AQUA_BLUE al_map_rgb(105, 237, 255)
+#define COLOR_AQUA_BLUE al_map_rgb(0, 92, 212)
 #define COLOR_GREY_GREEN al_map_rgb(102, 136, 92)
 #define COLOR_YELLOW al_map_rgb(202, 165, 0)
 #define COLOR_LIGHT_GREEN al_map_rgb(0, 202, 44)
 #define COLOR_GREY_PURPLE al_map_rgb(113, 75, 138)
 #define COLOR_GREY al_map_rgb(160, 160, 160)
 #define COLOR_FIRE_ORANGE al_map_rgb(255, 101, 11)
-
 
 // Animation
 #define PLAYER_IDLE_FRAMES 17

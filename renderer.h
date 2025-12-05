@@ -25,7 +25,9 @@ typedef struct
   ALLEGRO_BITMAP *display_buffer;
   Combat *combat;
   ALLEGRO_FONT *font;
-
+  ALLEGRO_BITMAP *start_screen;
+  ALLEGRO_BITMAP *death_screen;
+  ALLEGRO_BITMAP *victory_screen;
   ALLEGRO_BITMAP *grass_field_background;
   ALLEGRO_BITMAP *divine_beast_background;
   ALLEGRO_BITMAP *hyrule_castle_background;
@@ -40,7 +42,6 @@ typedef struct
   ALLEGRO_BITMAP *special_card;
   ALLEGRO_BITMAP *kaioken_card;
   ALLEGRO_BITMAP *charge_card;
-
   ALLEGRO_BITMAP *stack_top;
   ALLEGRO_BITMAP *discard_stack_top;
   ALLEGRO_BITMAP *stamina_wheel;
@@ -55,6 +56,7 @@ typedef struct
   AnimationSet *enemy_animations[DEFAULT_ENEMY_GROUP_SIZE];
 
   int actual_floor;
+  int game_stage
 } Renderer;
 
 void loadEnemyAnimations(Renderer *renderer);

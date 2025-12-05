@@ -42,7 +42,7 @@ int main()
   FillRenderer(&renderer);
   al_register_event_source(queue, al_get_display_event_source(renderer.display));
 
-  renderer.actual_floor = 1;
+  renderer.actual_floor = 0;
   al_start_timer(timer);
   while (1)
   {
@@ -77,18 +77,12 @@ int main()
           printf("Batalha contra o BOSS!\n");
         }
       }
-      else
-      {
-        printf("Vitoria!\n");
-        done = 1;
-      }
+      else if (renderer.actual_floor == 11)
+        renderer.actual_floor++;
     }
 
     if (renderer.combat->player->player_stats->healthbar <= 0)
-    {
-      printf("Derrota...\n");
-      done = 1;
-    }
+      renderer.actual_floor = -1;
 
     switch (event.type)
     {
@@ -172,29 +166,34 @@ int main()
       // ENTER LOGIC
       if (keyboard_keys[ALLEGRO_KEY_ENTER] & GAME_KEY_SEEN)
       {
-        if (renderer.combat->__has_enter_been_pressed == false && renderer.combat->__has_passive_card_been_used == false)
+        if (renderer.actual_floor == 0)
+          renderer.actual_floor++;
+        else
         {
-          ActionType action_type = renderer.combat->player->hand->cards[renderer.combat->pointed_card]->card_type;
-          if (action_type == ATTACK || action_type == VULNERABILITY || action_type == WEAKNESS || action_type == POISON)
+          if (renderer.combat->__has_enter_been_pressed == false && renderer.combat->__has_passive_card_been_used == false)
           {
-            if (renderer.combat->enemies_left > 0)
+            ActionType action_type = renderer.combat->player->hand->cards[renderer.combat->pointed_card]->card_type;
+            if (action_type == ATTACK || action_type == VULNERABILITY || action_type == WEAKNESS || action_type == POISON)
             {
-              renderer.combat->pointed_enemy = getFirstAliveEnemy(renderer.combat->enemy_group);
-              renderer.combat->__has_enter_been_pressed = true;
+              if (renderer.combat->enemies_left > 0)
+              {
+                renderer.combat->pointed_enemy = getFirstAliveEnemy(renderer.combat->enemy_group);
+                renderer.combat->__has_enter_been_pressed = true;
+              }
             }
+            else
+              renderer.combat->__has_passive_card_been_used = true;
           }
-          else
-            renderer.combat->__has_passive_card_been_used = true;
-        }
-        else if (((renderer.combat->__has_enter_been_pressed == true) || (renderer.combat->__has_passive_card_been_used == true)) && renderer.combat->player->energy >= renderer.combat->player->hand->cards[renderer.combat->pointed_card]->cost)
-        {
-          renderer.combat->__has_enter_been_pressed = false;
-          renderer.combat->__has_passive_card_been_used = false;
-          renderer.combat->player->energy -= renderer.combat->player->hand->cards[renderer.combat->pointed_card]->cost;
-          applyAction(renderer.combat, renderer.combat->player->hand->cards[renderer.combat->pointed_card],
-                      renderer.combat->player->player_stats, renderer.combat->enemy_group->enemies[renderer.combat->pointed_enemy]->enemy_stats);
-          updateChargeCard(renderer.combat->player->hand, renderer.combat->player->energy);
-          printf("enemies left: %d\n", renderer.combat->enemies_left);
+          else if (((renderer.combat->__has_enter_been_pressed == true) || (renderer.combat->__has_passive_card_been_used == true)) && renderer.combat->player->energy >= renderer.combat->player->hand->cards[renderer.combat->pointed_card]->cost)
+          {
+            renderer.combat->__has_enter_been_pressed = false;
+            renderer.combat->__has_passive_card_been_used = false;
+            renderer.combat->player->energy -= renderer.combat->player->hand->cards[renderer.combat->pointed_card]->cost;
+            applyAction(renderer.combat, renderer.combat->player->hand->cards[renderer.combat->pointed_card],
+                        renderer.combat->player->player_stats, renderer.combat->enemy_group->enemies[renderer.combat->pointed_enemy]->enemy_stats);
+            updateChargeCard(renderer.combat->player->hand, renderer.combat->player->energy);
+            printf("enemies left: %d\n", renderer.combat->enemies_left);
+          }
         }
       }
       // CANCEL ACTION LOGIC (EXTRA)

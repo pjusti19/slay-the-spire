@@ -122,6 +122,9 @@ void FillRenderer(Renderer *renderer)
       al_create_bitmap(DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT);
   must_init(renderer->display_buffer, "display buffer");
 
+  renderer->start_screen = al_load_bitmap("assets/start_screen.png");
+  renderer->death_screen = al_load_bitmap("assets/death_screen.png");
+  renderer->victory_screen = al_load_bitmap("assets/victory_screen.png");
   renderer->grass_field_background = al_load_bitmap("assets/hyrule_background.png");
   renderer->divine_beast_background = al_load_bitmap("assets/divine_beast.png");
   renderer->hyrule_castle_background = al_load_bitmap("assets/hyrule_castle.png");
@@ -140,7 +143,6 @@ void FillRenderer(Renderer *renderer)
   renderer->discard_stack_top = al_load_bitmap("assets/cards/discard.png");
   renderer->stamina_wheel = al_load_bitmap("assets/stamina_wheel.png");
   renderer->charge_gauge = al_load_bitmap("assets/charge_gauge.png");
-
   renderer->player_idle_frame_count = PLAYER_IDLE_FRAMES;
   renderer->player_idle_frame_speed = 8;
   renderer->player_idle_current_frame = 0;
@@ -165,7 +167,16 @@ void FillRenderer(Renderer *renderer)
 void RenderBackground(Renderer *renderer)
 {
   al_clear_to_color(COLOR_BLACK);
-  if (renderer->actual_floor < 5)
+  if (renderer->actual_floor == 12)
+    al_draw_scaled_bitmap(renderer->victory_screen, 0, 0, al_get_bitmap_width(renderer->victory_screen),
+                          al_get_bitmap_height(renderer->victory_screen), 0, 0, DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT, 0);
+  else if (renderer->actual_floor == -1)
+    al_draw_scaled_bitmap(renderer->death_screen, 0, 0, al_get_bitmap_width(renderer->death_screen),
+                          al_get_bitmap_height(renderer->death_screen), 0, 0, DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT, 0);
+  else if (renderer->actual_floor == 0)
+    al_draw_scaled_bitmap(renderer->start_screen, 0, 0, al_get_bitmap_width(renderer->start_screen),
+                          al_get_bitmap_height(renderer->start_screen), 0, 0, DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT, 0);
+  else if (renderer->actual_floor < 5)
     al_draw_scaled_bitmap(renderer->grass_field_background, 0, 0, al_get_bitmap_width(renderer->grass_field_background),
                           al_get_bitmap_height(renderer->grass_field_background), 0, 0, DISPLAY_BUFFER_WIDTH, DISPLAY_BUFFER_HEIGHT, 0);
   else if (renderer->actual_floor < 9)
@@ -509,23 +520,23 @@ void RenderEnemies(Renderer *renderer, int x_left, int y_top, int actual_enemy)
   switch (enemy->actions->cards[action]->card_type)
   {
   case ATTACK:
-    sprintf(action_type, "ATK");
+    sprintf(action_type, "ATK %d", enemy->actions->cards[action]->effect_rate);
     color = COLOR_RED;
     break;
   case DEFENSE:
-    sprintf(action_type, "DEF");
+    sprintf(action_type, "DEF %d", enemy->actions->cards[action]->effect_rate);
     color = COLOR_AQUA_BLUE;
     break;
   case VULNERABILITY:
-    sprintf(action_type, "VUL");
+    sprintf(action_type, "VUL %%%d", enemy->actions->cards[action]->effect_rate);
     color = COLOR_GREY_PURPLE;
     break;
   case WEAKNESS:
-    sprintf(action_type, "WKN");
+    sprintf(action_type, "WKN %%%d", enemy->actions->cards[action]->effect_rate);
     color = COLOR_GREY;
     break;
   case POISON:
-    sprintf(action_type, "PSN");
+    sprintf(action_type, "PSN %d", enemy->actions->cards[action]->effect_rate);
     color = COLOR_GREY_GREEN;
     break;
   }
@@ -546,48 +557,50 @@ void Render(Renderer *renderer)
   al_set_target_bitmap(renderer->display_buffer);
 
   RenderBackground(renderer);
-
-  if (renderer->combat->player->stack->deck_size > 0)
-    RenderStack(renderer, DRAW_DECK_X, DRAW_DECK_Y, renderer->combat->player->stack, false);
-
-  if (renderer->combat->player->discard_stack->deck_size > 0)
-    RenderStack(renderer, DRAW_DECK_X + 815, DRAW_DECK_Y, renderer->combat->player->discard_stack, true);
-
-  if (renderer->combat->player->player_stats->healthbar > 0)
-    RenderPlayer(renderer, PLAYER_BEGIN_X, PLAYER_BEGIN_Y + PLAYER_RADIUS, PLAYER_RADIUS);
-
-  // Stamina
-  RenderEnergy(renderer, ENERGY_GAUGE_BEGIN_X, ENERGY_GAUGE_BEGIN_Y + 10, ENERGY_GAUGE_RADIUS,
-               renderer->combat->player->energy, renderer->combat->player->max_energy, renderer->stamina_wheel, 0);
-
-  // Charges
-  RenderEnergy(renderer, CHARGE_GAUGE_BEGIN_X, CHARGE_GAUGE_BEGIN_Y - 30, CHARGE_GAUGE_RADIUS,
-               renderer->combat->player->charges, MAX_CHARGES, renderer->charge_gauge, 17);
-
-  for (int i = 0; i < renderer->combat->enemy_group->enemy_amount; i++)
+  if (renderer->actual_floor > 0 && renderer->actual_floor < 12)
   {
-    int begin_x;
-    int begin_y;
-    if (renderer->combat->enemy_group->enemies[i]->enemy_type == WEAK)
-    {
-      begin_x = ENEMY_BEGIN_X + 250 + (115 * i);
-      begin_y = ENEMY_BEGIN_Y + 65 + (20 * i);
-    }
-    else if (renderer->combat->enemy_group->enemies[i]->enemy_type == STRONG)
-    {
-      begin_x = ENEMY_BEGIN_X - 50;
-      begin_y = ENEMY_BEGIN_Y;
-    }
-    else if (renderer->combat->enemy_group->enemies[i]->enemy_type == BOSS)
-    {
-      begin_x = 600;
-      begin_y = 230;
-    }
-    if (renderer->combat->enemy_group->enemies[i]->enemy_stats->healthbar > 0)
-      RenderEnemies(renderer, begin_x, begin_y, i);
-  }
+    if (renderer->combat->player->stack->deck_size > 0)
+      RenderStack(renderer, DRAW_DECK_X, DRAW_DECK_Y, renderer->combat->player->stack, false);
 
-  RenderPlayerHand(renderer);
+    if (renderer->combat->player->discard_stack->deck_size > 0)
+      RenderStack(renderer, DRAW_DECK_X + 815, DRAW_DECK_Y, renderer->combat->player->discard_stack, true);
+
+    if (renderer->combat->player->player_stats->healthbar > 0)
+      RenderPlayer(renderer, PLAYER_BEGIN_X, PLAYER_BEGIN_Y + PLAYER_RADIUS, PLAYER_RADIUS);
+
+    // Stamina
+    RenderEnergy(renderer, ENERGY_GAUGE_BEGIN_X, ENERGY_GAUGE_BEGIN_Y + 10, ENERGY_GAUGE_RADIUS,
+                 renderer->combat->player->energy, renderer->combat->player->max_energy, renderer->stamina_wheel, 0);
+
+    // Charges
+    RenderEnergy(renderer, CHARGE_GAUGE_BEGIN_X, CHARGE_GAUGE_BEGIN_Y - 30, CHARGE_GAUGE_RADIUS,
+                 renderer->combat->player->charges, MAX_CHARGES, renderer->charge_gauge, 17);
+
+    for (int i = 0; i < renderer->combat->enemy_group->enemy_amount; i++)
+    {
+      int begin_x;
+      int begin_y;
+      if (renderer->combat->enemy_group->enemies[i]->enemy_type == WEAK)
+      {
+        begin_x = ENEMY_BEGIN_X + 250 + (125 * i);
+        begin_y = ENEMY_BEGIN_Y + 75;
+      }
+      else if (renderer->combat->enemy_group->enemies[i]->enemy_type == STRONG)
+      {
+        begin_x = ENEMY_BEGIN_X - 50;
+        begin_y = ENEMY_BEGIN_Y;
+      }
+      else if (renderer->combat->enemy_group->enemies[i]->enemy_type == BOSS)
+      {
+        begin_x = 600;
+        begin_y = 230;
+      }
+      if (renderer->combat->enemy_group->enemies[i]->enemy_stats->healthbar > 0)
+        RenderEnemies(renderer, begin_x, begin_y, i);
+    }
+
+    RenderPlayerHand(renderer);
+  }
 
   al_set_target_backbuffer(renderer->display);
 

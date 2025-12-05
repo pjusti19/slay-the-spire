@@ -1,6 +1,5 @@
-ONDE EU PAREI:
+O QUE DA PRA ACRESCENTAR:
 
-1- mensagem de fim de jogo/vitoria
-3 - Exibir os buffs/debuffs
-4 - musica
+1 - Exibir os buffs/debuffs
+2 - musica
 
