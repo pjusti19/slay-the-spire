@@ -23,7 +23,7 @@
 
 // Deck
 #define DRAW_DECK_X 30
-#define DRAW_DECK_Y 408q
+#define DRAW_DECK_Y 408
 
 #define DECK_WIDTH 100
 #define DECK_HEIGHT 130
