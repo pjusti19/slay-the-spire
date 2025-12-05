@@ -56,7 +56,7 @@ typedef struct
   AnimationSet *enemy_animations[DEFAULT_ENEMY_GROUP_SIZE];
 
   int actual_floor;
-  int game_stage
+  int game_stage;
 } Renderer;
 
 void loadEnemyAnimations(Renderer *renderer);
